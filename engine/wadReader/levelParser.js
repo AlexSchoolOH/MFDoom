@@ -138,7 +138,6 @@ window.levelParser = {
     },
 
     subsectorToMesh:(subSector,subSectorID) => {
-        console.log(`Building mesh for ${subSectorID}`);
         const levelData = window.levelParser.levelData;
         const mesh = {
             a_position:{ numComponents: 3, data: []},
@@ -146,15 +145,22 @@ window.levelParser = {
         };
 
         for (let index = 0; index < subSector.segCount; index++) {
-            console.log(`Segment starts at ${subSector.first + index}`)
             const seg = levelData.segs[subSector.first + index];
-            mesh.a_position.data.push(levelData.vertices[seg.start][0],-1,levelData.vertices[seg.start][1]);
-            mesh.a_position.data.push(levelData.vertices[seg.end][0],-1,levelData.vertices[seg.end][1]);
-            mesh.a_position.data.push(levelData.vertices[seg.end][0],1,levelData.vertices[seg.end][1]);
+            //mesh.a_position.data.push(levelData.vertices[seg.start][0],-10,levelData.vertices[seg.start][1]);
+            //mesh.a_position.data.push(levelData.vertices[seg.end][0],-10,levelData.vertices[seg.end][1]);
+            //mesh.a_position.data.push(levelData.vertices[seg.end][0],10,levelData.vertices[seg.end][1]);
+            //mesh.a_position.data.push(levelData.vertices[seg.start][0],-10,levelData.vertices[seg.start][1]);
+            //mesh.a_position.data.push(levelData.vertices[seg.start][0],10,levelData.vertices[seg.start][1]);
+            //mesh.a_position.data.push(levelData.vertices[seg.end][0],10,levelData.vertices[seg.end][1]);
 
-            mesh.a_position.data.push(levelData.vertices[seg.start][0],-1,levelData.vertices[seg.start][1]);
-            mesh.a_position.data.push(levelData.vertices[seg.start][0],1,levelData.vertices[seg.start][1]);
-            mesh.a_position.data.push(levelData.vertices[seg.end][0],1,levelData.vertices[seg.end][1]);
+            mesh.a_position.data.push(
+                -1,-1,1,
+                1,-1,1,
+                1,1,1,
+                -1,-1,1,
+                -1,1,1,
+                1,1,1
+            );
 
             mesh.a_color.data.push(
                 0,1,0,
@@ -166,8 +172,13 @@ window.levelParser = {
             );
         }
 
+        mesh.a_position.data = new Float32Array(mesh.a_position.data);
+        mesh.a_color.data = new Float32Array(mesh.a_color.data);
+
+        console.log(mesh);
+
         levelData.subsectors[subSectorID].mesh = twgl.createBuffersFromArrays(renderer.gl, mesh);
-        console.log(Object.keys(twgl.createBuffersFromArrays(renderer.gl, mesh)));
+        console.log((twgl.createBuffersFromArrays(renderer.gl, mesh)));
     },
 
     parseMesh:() => {

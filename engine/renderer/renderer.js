@@ -19,8 +19,8 @@ window.renderer = {
             void main()
             {
                 v_color = a_color;
-                highp vec3 transformed = transform(a_position,u_camera);
-                gl_Position = vec4(transformed,transformed.z);
+                highp vec3 transformed = a_position;//transform(a_position,u_camera);
+                gl_Position = vec4(transformed,transformed.z) - vec4(0,0,1,0);
             }
             `,
             `
