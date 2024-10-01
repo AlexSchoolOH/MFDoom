@@ -11,9 +11,7 @@ window.entities.base = class {
         this.init();
     }
 
-    init() {
-        console.log(`I'm at ${this.x} ${this.y} ${this.z}!`);
-    }
+    init() {}
 
     _update() {
         this.update();

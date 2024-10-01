@@ -42,7 +42,7 @@ window.levelParser = {
                 upper:wad.ReadString(offset + 4,8),
                 lower:wad.ReadString(offset + 12,8),
                 middle:wad.ReadString(offset + 20,8),
-                sector:wad.Read2Bytes(offset + 28,true),
+                sector:wad.Read2Bytes(offset + 28,false),
             };
         },30);
 
@@ -138,36 +138,50 @@ window.levelParser = {
     },
 
     subsectorToMesh:(subSector,subSectorID) => {
-        console.log(`Building mesh for ${subSectorID}`);
         const levelData = window.levelParser.levelData;
         const mesh = {
             a_position:{ numComponents: 3, data: []},
             a_color:{ numComponents: 3, data: []},
         };
 
+        //Parse linedef data
         for (let index = 0; index < subSector.segCount; index++) {
-            console.log(`Segment starts at ${subSector.first + index}`)
+            //Sidedefs and stuff
             const seg = levelData.segs[subSector.first + index];
-            mesh.a_position.data.push(levelData.vertices[seg.start][0],-1,levelData.vertices[seg.start][1]);
-            mesh.a_position.data.push(levelData.vertices[seg.end][0],-1,levelData.vertices[seg.end][1]);
-            mesh.a_position.data.push(levelData.vertices[seg.end][0],1,levelData.vertices[seg.end][1]);
+            const linedef = levelData.linedefs[seg.linedef];
 
-            mesh.a_position.data.push(levelData.vertices[seg.start][0],-1,levelData.vertices[seg.start][1]);
-            mesh.a_position.data.push(levelData.vertices[seg.start][0],1,levelData.vertices[seg.start][1]);
-            mesh.a_position.data.push(levelData.vertices[seg.end][0],1,levelData.vertices[seg.end][1]);
+            const frontSideDef = levelData.sideDefs[linedef.front] || 65535;
+            const backSideDef = levelData.sideDefs[linedef.back] || 65535;
 
-            mesh.a_color.data.push(
-                0,1,0,
-                0,1,0,
-                0,1,0,
-                0,1,0,
-                0,1,0,
-                0,1,0
-            );
+            const frontSector = levelData.sectors[frontSideDef.sector];
+            const backSector = levelData.sectors[backSideDef.sector];
+            if (linedef.back == 65535) {
+                console.log(frontSector.ceilingHeight - frontSector.floorHeight);
+                mesh.a_position.data.push(levelData.vertices[seg.start][0],frontSector.floorHeight,levelData.vertices[seg.start][1]);
+                mesh.a_position.data.push(levelData.vertices[seg.end][0],  frontSector.floorHeight,levelData.vertices[seg.end][1]);
+                mesh.a_position.data.push(levelData.vertices[seg.end][0],  frontSector.ceilingHeight,levelData.vertices[seg.end][1]);
+                mesh.a_position.data.push(levelData.vertices[seg.start][0],frontSector.floorHeight,levelData.vertices[seg.start][1]);
+                mesh.a_position.data.push(levelData.vertices[seg.start][0],frontSector.ceilingHeight,levelData.vertices[seg.start][1]);
+                mesh.a_position.data.push(levelData.vertices[seg.end][0],  frontSector.ceilingHeight,levelData.vertices[seg.end][1]);
+    
+                mesh.a_color.data.push(
+                    1,0,0,
+                    0,0,0,
+                    0,1,0,
+                    1,0,0,
+                    1,1,0,
+                    0,1,0
+                );
+            }
         }
 
-        levelData.subsectors[subSectorID].mesh = twgl.createBuffersFromArrays(renderer.gl, mesh);
-        console.log(Object.keys(twgl.createBuffersFromArrays(renderer.gl, mesh)));
+        mesh.a_position.data = new Float32Array(mesh.a_position.data);
+        mesh.a_color.data = new Float32Array(mesh.a_color.data);
+
+        //console.log(mesh);
+
+        levelData.subsectors[subSectorID].mesh = twgl.createBufferInfoFromArrays(renderer.gl, mesh);
+        //console.log((twgl.createBuffersFromArrays(renderer.gl, mesh)));
     },
 
     parseMesh:() => {
