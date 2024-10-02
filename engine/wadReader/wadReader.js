@@ -22,19 +22,25 @@ window.wad = {
     },
 
     ReadByte:(offset,isSigned) => {
-        return isSigned ? 
-        (window.wad.ReadBytes(offset,1) + window.wad.int8_HLF) % window.wad.int8_LIM - window.wad.int8_HLF: 
-        window.wad.ReadBytes(offset,1);
+        let num = window.wad.ReadBytes(offset,1);
+        if (isSigned) {
+            if (num > window.wad.int8_HLF) num -= window.wad.int8_LIM;
+        }
+        return num;
     },
     Read2Bytes:(offset,isSigned) => {
-        return isSigned ? 
-        (window.wad.ReadBytes(offset,2) + window.wad.int16_HLF) % window.wad.int16_LIM - window.wad.int16_HLF : 
-        window.wad.ReadBytes(offset,2);
+        let num = window.wad.ReadBytes(offset,2);
+        if (isSigned) {
+            if (num > window.wad.int16_HLF) num -= window.wad.int16_LIM;
+        }
+        return num;
     },
     Read4Bytes:(offset,isSigned) => {
-        return isSigned ? 
-        (window.wad.ReadBytes(offset,4) + window.wad.int32_HLF) % window.wad.int32_LIM - window.wad.int32_HLF : 
-        window.wad.ReadBytes(offset,4);
+        let num = window.wad.ReadBytes(offset,4);
+        if (isSigned) {
+            if (num > window.wad.int32_HLF) num -= window.wad.int32_LIM;
+        }
+        return num;
     },
     ReadBytes:(offset,length) => {
         let string = "";
