@@ -169,7 +169,8 @@ window.levelParser = {
 
         const firstSeg = levelData.segs[subSector.first];
         const firstLinedef = levelData.linedefs[firstSeg.linedef];
-        const mainSector = (firstSeg.direction == 1 ? levelData.sideDefs[firstLinedef.back] : levelData.sideDefs[firstLinedef.front]) || 65535;
+        let mainSector = (firstSeg.direction == 1 ? levelData.sideDefs[firstLinedef.back] : levelData.sideDefs[firstLinedef.front]) || 65535;
+        mainSector = levelData.sectors[mainSector.sector];
 
         //Add explicit points and walls
         for (let index = 0; index < subSector.segCount; index++) {
@@ -251,24 +252,35 @@ window.levelParser = {
         }
 
         //Floor
-        points.sort((a,b)=> a[2] - b[2]);
-        const cut = earcut(points,null,3);
-        console.log(JSON.stringify(points));
-        console.log(JSON.stringify(cut));
-        for (let index = 0; index < cut.length; index+=3) {
-            const p1 = cut[index];
-            const p2 = cut[index+1];
-            const p3 = cut[index+2];
-            
-            mesh.a_position.data.push(p1[0],mainSector.floorHeight,p1[1]);
-            mesh.a_position.data.push(p2[0],mainSector.floorHeight,p2[1]);
-            mesh.a_position.data.push(p3[0],mainSector.floorHeight,p3[1]);
-            
-            mesh.a_color.data.push(
-                1,1,0,
-                0,1,1,
-                1,0,1
-            );
+        if (points.length >= 3) {
+            points.sort((a,b)=> a[2] - b[2]);
+            for (let index = 0; index < points.length; index++) {
+                points[index].splice(2, points[index].length - 2);
+            }
+            const cut = (points.length == 3) ? [0,1,2] : earcut(points.flat());
+            console.log(JSON.stringify(points));
+            console.log(JSON.stringify(cut));
+            for (let index = 0; index < cut.length; index+=3) {
+                const p1 = points[cut[index]];
+                const p2 = points[cut[index+1]];
+                const p3 = points[cut[index+2]];
+                
+                mesh.a_position.data.push(p1[0],mainSector.floorHeight,p1[1]);
+                console.log(p1[0],p1[1])
+                console.log(p2[0],p2[1])
+                console.log(p3[0],p3[1])
+                console.log(mainSector.floorHeight)
+                mesh.a_position.data.push(p2[0],mainSector.floorHeight,p2[1]);
+                mesh.a_position.data.push(p3[0],mainSector.floorHeight,p3[1]);
+                
+                mesh.a_color.data.push(
+                    1,1,0,
+                    0,1,1,
+                    1,0,1
+                );
+
+                console.log("cut added " + index)
+            }
         }
 
         mesh.a_position.data = new Float32Array(mesh.a_position.data);

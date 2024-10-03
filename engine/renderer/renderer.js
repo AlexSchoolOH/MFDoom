@@ -45,6 +45,11 @@ window.renderer = {
         ]);
 
         window.renderer.gl.viewport(0, 0, window.renderer.gl.canvas.width, window.renderer.gl.canvas.height);
+
+        window.renderer.gl.clearColor(0,0,0,1);
+        window.renderer.gl.enable(renderer.gl.DEPTH_TEST);
+        window.renderer.gl.depthFunc(renderer.gl.LEQUAL);
+
         window.renderer.gl.enable(window.renderer.gl.CULL_FACE);
         window.renderer.gl.cullFace(window.renderer.gl.BACK);
     }

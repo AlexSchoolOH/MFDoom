@@ -21,19 +21,15 @@ window.wadRead = () => {
         });
     }
 
-    if (wad.FindFirstLumpOfName("MAP01") > 0) {
+    if (wad.FindFirstLumpOfName("MAP01") >= 0) {
         levelParser.read("MAP01");
     }
-    else if (wad.FindFirstLumpOfName("E1M1") > 0) {
+    else if (wad.FindFirstLumpOfName("E1M1") >= 0) {
         levelParser.read("E1M1");
     }
     else {
         console.error("No first map.");
     }
-
-    renderer.gl.clearColor(0,0,0,1);
-    renderer.gl.enable(renderer.gl.DEPTH_TEST);
-    renderer.gl.depthFunc(renderer.gl.LEQUAL);
 
     setInterval(() => {
         renderer.gl.clear(renderer.gl.COLOR_BUFFER_BIT | renderer.gl.DEPTH_BUFFER_BIT);
