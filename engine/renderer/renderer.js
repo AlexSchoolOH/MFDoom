@@ -13,7 +13,14 @@ window.renderer = {
             uniform highp mat3 u_camera;
 
             highp vec3 transform(highp vec3 inputPosition, highp mat3 transformation) {
-                return inputPosition - vec3(transformation[0][2],transformation[1][2],transformation[2][2]);
+                inputPosition -= vec3(transformation[0][2],transformation[1][2],transformation[2][2]);
+
+                inputPosition.xz = vec2(
+                    inputPosition.z * transformation[0][0] + inputPosition.x * transformation[0][1],
+                    inputPosition.z * transformation[0][1] - inputPosition.x * transformation[0][0]
+                );
+                
+                return inputPosition;
             }
 
             void main()
@@ -38,5 +45,12 @@ window.renderer = {
         ]);
 
         window.renderer.gl.viewport(0, 0, window.renderer.gl.canvas.width, window.renderer.gl.canvas.height);
+
+        window.renderer.gl.clearColor(0,0,0,1);
+        window.renderer.gl.enable(renderer.gl.DEPTH_TEST);
+        window.renderer.gl.depthFunc(renderer.gl.LEQUAL);
+
+        window.renderer.gl.enable(window.renderer.gl.CULL_FACE);
+        window.renderer.gl.cullFace(window.renderer.gl.BACK);
     }
 }

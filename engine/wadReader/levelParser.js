@@ -23,15 +23,19 @@ window.levelParser = {
             };
         },14);
 
-        window.levelParser.levelData.sectors = wad.ReadLump(LumpID + wad.mapIndicies.LINEDEF, (offset) => {
+        window.levelParser.levelData.sectors = wad.ReadLump(LumpID + wad.mapIndicies.SECTOR, (offset) => {
+            console.log(`Sector id ${offset}`);
+            console.log(wad.Read2Bytes(offset,true));
+            console.log(wad.Read2Bytes(offset + 2,true));
             return {
                 floorHeight:wad.Read2Bytes(offset,true),
                 ceilingHeight:wad.Read2Bytes(offset + 2,true),
                 floorFlat:wad.ReadString(offset + 4,8),
                 ceilFlat:wad.ReadString(offset + 12,8),
-                lightLevel:wad.Read2Bytes(offset + 20,true),
-                type:wad.Read2Bytes(offset + 22,true),
-                tag:wad.Read2Bytes(offset + 24,true)
+                lightLevel:wad.Read2Bytes(offset + 20,false),
+                type:wad.Read2Bytes(offset + 22,false),
+                tag:wad.Read2Bytes(offset + 24,false),
+                lines:[]
             };
         },26);
 
@@ -52,7 +56,7 @@ window.levelParser = {
                 end:wad.Read2Bytes(offset + 2,false),
                 angle:wad.Read2Bytes(offset + 4,true),
                 linedef:wad.Read2Bytes(offset + 6,false),
-                direction:wad.Read2Bytes(offset + 8,true),
+                direction:wad.Read2Bytes(offset + 8,false),
                 offset:wad.Read2Bytes(offset + 10,true),
             };
         },12);
@@ -82,8 +86,8 @@ window.levelParser = {
                     wad.Read2Bytes(offset + 20,true),
                     wad.Read2Bytes(offset + 22,true),
                 ],
-                rightChild:wad.Read2Bytes(offset + 24,true),
-                leftChild:wad.Read2Bytes(offset + 26,true),
+                rightChild:wad.Read2Bytes(offset + 24,false),
+                leftChild:wad.Read2Bytes(offset + 26,false),
             };
         },28);
 
@@ -137,41 +141,145 @@ window.levelParser = {
         window.levelParser.parseMesh();
     },
 
-    subsectorToMesh:(subSector,subSectorID) => {
+    //Doing this because triangulating segs is a pain in the arse.
+    getLinesForSectors:() => {
+        const levelData = window.levelParser.levelData;
+        for (let lineDefID = 0; lineDefID < levelData.linedefs.length; lineDefID++) {
+            const lineDef = levelData.linedefs[lineDefID];
+
+            if (lineDef.front != 65535) {
+                const sideDef = levelData.sideDefs[lineDef.front];
+                window.levelParser.levelData.sectors[sideDef.sector].lines.push([lineDefID,false]);
+            }
+            if (lineDef.back != 65535) {
+                const sideDef = levelData.sideDefs[lineDef.back];
+                window.levelParser.levelData.sectors[sideDef.sector].lines.push([lineDefID,true]);
+            }
+        }
+    },
+
+    subSectorToMesh:(subSector,subSectorID) => {
         const levelData = window.levelParser.levelData;
         const mesh = {
             a_position:{ numComponents: 3, data: []},
             a_color:{ numComponents: 3, data: []},
         };
 
-        //Parse linedef data
+        let points = [];
+
+        const firstSeg = levelData.segs[subSector.first];
+        const firstLinedef = levelData.linedefs[firstSeg.linedef];
+        let mainSector = (firstSeg.direction == 1 ? levelData.sideDefs[firstLinedef.back] : levelData.sideDefs[firstLinedef.front]) || 65535;
+        mainSector = levelData.sectors[mainSector.sector];
+
+        //Add explicit points and walls
         for (let index = 0; index < subSector.segCount; index++) {
             //Sidedefs and stuff
             const seg = levelData.segs[subSector.first + index];
             const linedef = levelData.linedefs[seg.linedef];
 
-            const frontSideDef = levelData.sideDefs[linedef.front] || 65535;
-            const backSideDef = levelData.sideDefs[linedef.back] || 65535;
+            points.push(levelData.vertices[seg.start]);
+
+            points[points.length - 1].push(Math.atan2(
+                levelData.vertices[seg.end][1] - levelData.vertices[seg.start][1],
+                levelData.vertices[seg.end][0] - levelData.vertices[seg.start][0]
+            ));
+
+            const frontSideDef = (seg.direction == 1 ? levelData.sideDefs[linedef.back] : levelData.sideDefs[linedef.front]) || 65535;
+            const backSideDef = (seg.direction == 1 ? levelData.sideDefs[linedef.front] : levelData.sideDefs[linedef.back]) || 65535;
 
             const frontSector = levelData.sectors[frontSideDef.sector];
             const backSector = levelData.sectors[backSideDef.sector];
+
+            //The actual wall
             if (linedef.back == 65535) {
-                console.log(frontSector.ceilingHeight - frontSector.floorHeight);
+                //UGHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH
                 mesh.a_position.data.push(levelData.vertices[seg.start][0],frontSector.floorHeight,levelData.vertices[seg.start][1]);
                 mesh.a_position.data.push(levelData.vertices[seg.end][0],  frontSector.floorHeight,levelData.vertices[seg.end][1]);
                 mesh.a_position.data.push(levelData.vertices[seg.end][0],  frontSector.ceilingHeight,levelData.vertices[seg.end][1]);
                 mesh.a_position.data.push(levelData.vertices[seg.start][0],frontSector.floorHeight,levelData.vertices[seg.start][1]);
-                mesh.a_position.data.push(levelData.vertices[seg.start][0],frontSector.ceilingHeight,levelData.vertices[seg.start][1]);
                 mesh.a_position.data.push(levelData.vertices[seg.end][0],  frontSector.ceilingHeight,levelData.vertices[seg.end][1]);
+                mesh.a_position.data.push(levelData.vertices[seg.start][0],frontSector.ceilingHeight,levelData.vertices[seg.start][1]);
     
                 mesh.a_color.data.push(
                     1,0,0,
                     0,0,0,
                     0,1,0,
                     1,0,0,
-                    1,1,0,
-                    0,1,0
+                    0,1,0,
+                    1,1,0
                 );
+            }
+            else {
+                //Ceiling
+                if (frontSector.ceilingHeight > backSector.ceilingHeight) {
+                    mesh.a_position.data.push(levelData.vertices[seg.start][0],backSector.ceilingHeight,levelData.vertices[seg.start][1]);
+                    mesh.a_position.data.push(levelData.vertices[seg.end][0],  backSector.ceilingHeight,levelData.vertices[seg.end][1]);
+                    mesh.a_position.data.push(levelData.vertices[seg.end][0],  frontSector.ceilingHeight,levelData.vertices[seg.end][1]);
+                    mesh.a_position.data.push(levelData.vertices[seg.start][0],backSector.ceilingHeight,levelData.vertices[seg.start][1]);
+                    mesh.a_position.data.push(levelData.vertices[seg.end][0],  frontSector.ceilingHeight,levelData.vertices[seg.end][1]);
+                    mesh.a_position.data.push(levelData.vertices[seg.start][0],frontSector.ceilingHeight,levelData.vertices[seg.start][1]);
+        
+                    mesh.a_color.data.push(
+                        1,0,0,
+                        0,0,0,
+                        0,1,0,
+                        1,0,0,
+                        0,1,0,
+                        1,1,0
+                    );
+                }
+                
+                //floor
+                if (frontSector.floorHeight < backSector.floorHeight) {
+                    mesh.a_position.data.push(levelData.vertices[seg.start][0],frontSector.floorHeight,levelData.vertices[seg.start][1]);
+                    mesh.a_position.data.push(levelData.vertices[seg.end][0],  frontSector.floorHeight,levelData.vertices[seg.end][1]);
+                    mesh.a_position.data.push(levelData.vertices[seg.end][0],  backSector.floorHeight,levelData.vertices[seg.end][1]);
+                    mesh.a_position.data.push(levelData.vertices[seg.start][0],frontSector.floorHeight,levelData.vertices[seg.start][1]);
+                    mesh.a_position.data.push(levelData.vertices[seg.end][0],  backSector.floorHeight,levelData.vertices[seg.end][1]);
+                    mesh.a_position.data.push(levelData.vertices[seg.start][0],backSector.floorHeight,levelData.vertices[seg.start][1]);
+        
+                    mesh.a_color.data.push(
+                        1,0,0,
+                        0,0,0,
+                        0,1,0,
+                        1,0,0,
+                        0,1,0,
+                        1,1,0
+                    );
+                }
+            }
+        }
+
+        //Floor
+        if (points.length >= 3) {
+            points.sort((a,b)=> a[2] - b[2]);
+            for (let index = 0; index < points.length; index++) {
+                points[index].splice(2, points[index].length - 2);
+            }
+            const cut = (points.length == 3) ? [0,1,2] : earcut(points.flat());
+            console.log(JSON.stringify(points));
+            console.log(JSON.stringify(cut));
+            for (let index = 0; index < cut.length; index+=3) {
+                const p1 = points[cut[index]];
+                const p2 = points[cut[index+1]];
+                const p3 = points[cut[index+2]];
+                
+                mesh.a_position.data.push(p1[0],mainSector.floorHeight,p1[1]);
+                console.log(p1[0],p1[1])
+                console.log(p2[0],p2[1])
+                console.log(p3[0],p3[1])
+                console.log(mainSector.floorHeight)
+                mesh.a_position.data.push(p2[0],mainSector.floorHeight,p2[1]);
+                mesh.a_position.data.push(p3[0],mainSector.floorHeight,p3[1]);
+                
+                mesh.a_color.data.push(
+                    1,1,0,
+                    0,1,1,
+                    1,0,1
+                );
+
+                console.log("cut added " + index)
             }
         }
 
@@ -185,9 +293,10 @@ window.levelParser = {
     },
 
     parseMesh:() => {
-        let subSectors = window.levelParser.levelData.subsectors;
+        window.levelParser.getLinesForSectors();
+        const subSectors = window.levelParser.levelData.subsectors;
         for (let subSectorID = 0; subSectorID < subSectors.length; subSectorID++) {
-            window.levelParser.subsectorToMesh(subSectors[subSectorID],subSectorID);
+            window.levelParser.subSectorToMesh(subSectors[subSectorID],subSectorID);
         }
     },
 };

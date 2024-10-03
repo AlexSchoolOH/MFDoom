@@ -21,32 +21,38 @@ window.wadRead = () => {
         });
     }
 
-    if (wad.FindFirstLumpOfName("MAP01") > 0) {
+    if (wad.FindFirstLumpOfName("MAP01") >= 0) {
         levelParser.read("MAP01");
     }
-    else if (wad.FindFirstLumpOfName("E1M1") > 0) {
+    else if (wad.FindFirstLumpOfName("E1M1") >= 0) {
         levelParser.read("E1M1");
     }
     else {
         console.error("No first map.");
     }
 
-    renderer.gl.clearColor(0,0,0,1);
-    renderer.gl.enable(renderer.gl.DEPTH_TEST);
-    renderer.gl.depthFunc(renderer.gl.LEQUAL);
-
     setInterval(() => {
-        renderer.gl.clear(renderer.gl.DEPTH_BUFFER_BIT);
-        if (levelParser.levelData && levelParser.levelData.subsectors) {
-            renderer.gl.viewport(0, 0, 600, 300);
-            renderer.gl.useProgram(renderer.shaders.unlit.program);
-            twgl.setUniforms(renderer.shaders.unlit,{u_camera:renderer.camera});
+        renderer.gl.clear(renderer.gl.COLOR_BUFFER_BIT | renderer.gl.DEPTH_BUFFER_BIT);
+        if (levelParser.levelData) {
+            //Entity Update Routine
+            if (levelParser.levelData.things) {
+                levelParser.levelData.things.forEach(thing => {
+                    thing._update();
+                });
+            }
 
-            levelParser.levelData.subsectors.forEach(subsector => {
-                if (!subsector.mesh) return;
-                twgl.setBuffersAndAttributes(renderer.gl, renderer.shaders.unlit, subsector.mesh);
-                twgl.drawBufferInfo(renderer.gl, subsector.mesh);
-            });
+            //Level Draw Routine
+            if (levelParser.levelData.sectors) {
+                renderer.gl.viewport(0, 0, 600, 300);
+                renderer.gl.useProgram(renderer.shaders.unlit.program);
+                twgl.setUniforms(renderer.shaders.unlit,{u_camera:renderer.camera});
+    
+                levelParser.levelData.subsectors.forEach(subsector => {
+                    if (!subsector.mesh) return;
+                    twgl.setBuffersAndAttributes(renderer.gl, renderer.shaders.unlit, subsector.mesh);
+                    twgl.drawBufferInfo(renderer.gl, subsector.mesh);
+                });
+            }
         }
     },16)
 }

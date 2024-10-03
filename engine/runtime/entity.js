@@ -5,7 +5,7 @@ window.entities.base = class {
         this.y = y;
         this.z = z;
 
-        this.angle = angle;
+        this.angle = (angle / 32768) * Math.PI;
         this.flags = flags;
 
         this.init();
