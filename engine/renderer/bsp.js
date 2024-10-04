@@ -7,9 +7,12 @@ window.bsp = {
 
     intersectOffset: (node1,node2) => {
         let denominator = window.bsp.perpDot([node1.dx,node1.dy],[node2.dx,node2.dy]);
+        console.log("Denominator " +denominator);
         if (Math.abs(denominator) < 1e-16) {
+            console.log("Less than");
             return;
         } else {
+            console.log("Greater than " + window.bsp.perpDot([node2.x - node1.x, node2.y - node1.y],[node2.dx,node2.dy]) / denominator)
             return window.bsp.perpDot([node2.x - node1.x, node2.y - node1.y],[node2.dx,node2.dy]) / denominator;
         }
     },

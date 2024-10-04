@@ -69,11 +69,21 @@ window.levelParser = {
         },4);
 
         window.levelParser.levelData.nodes = wad.ReadLump(LumpID + wad.mapIndicies.NODE, (offset) => {
+            let DX = Math.pow(wad.Read2Bytes(offset + 4,true),2);
+            let DY = Math.pow(wad.Read2Bytes(offset + 6,true),2);
+
+            if (isNaN(DX)) {
+                DX = 0;
+            }
+            if (isNaN(DY)) {
+                DY = 0;
+            }
+            const distance = Math.sqrt(DX + DY);
             return {
                 x:wad.Read2Bytes(offset,true),
                 y:wad.Read2Bytes(offset + 2,true),
-                dx:wad.Read2Bytes(offset + 4,true),
-                dy:wad.Read2Bytes(offset + 6,true),
+                dx:wad.Read2Bytes(offset + 4,true) / distance,
+                dy:wad.Read2Bytes(offset + 6,true) /  distance,
                 right: [
                     wad.Read2Bytes(offset + 8,true),
                     wad.Read2Bytes(offset + 10,true),
@@ -141,6 +151,22 @@ window.levelParser = {
         window.levelParser.parseMesh();
     },
 
+    //Trying something different
+    getLinesForSectors() {
+        const levelData = window.levelParser.levelData;
+        for (let index = 0; index < levelData.linedefs.length; index++) {
+            const linedef = levelData.linedefs[index];
+            let front = linedef.front;
+            if (front != 65535) {
+                window.levelParser.levelData.sectors[levelData.sideDefs[front].sector].lines.push(index);
+            }
+            let back = linedef.back;
+            if (back != 65535) {
+                window.levelParser.levelData.sectors[levelData.sideDefs[back].sector].lines.push(index);
+            }
+        }
+    },
+
     //Doing this because triangulating segs is a pain in the arse.
     //And I really need these paths to calculate the BSP differentials from a subsector
     getBSPTreeForSubSectors:(startingNode,path) => {
@@ -183,8 +209,6 @@ window.levelParser = {
         const firstLinedef = levelData.linedefs[firstSeg.linedef];
         let mainSector = (firstSeg.direction == 1 ? levelData.sideDefs[firstLinedef.back] : levelData.sideDefs[firstLinedef.front]) || 65535;
         mainSector = levelData.sectors[mainSector.sector];
-
-        console.log(subSector.path.length)
 
         //Add explicit points and walls
         for (let index = 0; index < subSector.segCount; index++) {
@@ -265,11 +289,14 @@ window.levelParser = {
             }
         }
 
+        /* Imma stop doing subsectors for floors.
         for (let i_line = 0; i_line < subSector.path.length - 1; i_line++) {
             for (let j_line = i_line + 1; j_line < subSector.path.length; j_line++) {
-                console.log(`i ${i_line} j ${j_line}`)
+                console.log(`i ${i_line} j ${j_line}`);
                 const node1 = levelData.nodes[subSector.path[i_line]];
                 const node2 = levelData.nodes[subSector.path[j_line]];
+                console.log(node1);
+                console.log(node2);
                 const point = bsp.findIntersection(node1,node2);
                 if (!point) continue;
                 console.log(`calculated point ${JSON.stringify(point)}`);
@@ -278,8 +305,8 @@ window.levelParser = {
                 let within_bsp = (d) => d >= -1e-3;
                 let within_seg = (d) => d <= 10;
                 let convert = (l) => levelData.nodes[l];
-                // The intersection point must lie both within the BSP volume
-                // and the segs volume.
+                //The intersection point must lie both within the BSP volume
+                //and the segs volume.
                 let inside_bsp_and_segs = subSector.path.map(convert).map(dist).every(within_bsp)
                     && subSector.path.map(convert).map(dist).every(within_seg);
                 if (inside_bsp_and_segs) {
@@ -287,7 +314,6 @@ window.levelParser = {
                     console.log(`Added point ${JSON.stringify(point)}`);
                 }
                 else {
-                    points.push(point);
                     console.log(`Refused point ${JSON.stringify(point)}`);
                 }
             }
@@ -316,8 +342,20 @@ window.levelParser = {
                     0,1,1,
                     1,0,1
                 );
+                
+                mesh.a_position.data.push(p1[0],mainSector.ceilingHeight,p1[1]);
+                mesh.a_position.data.push(p3[0],mainSector.ceilingHeight,p3[1]);
+                mesh.a_position.data.push(p2[0],mainSector.ceilingHeight,p2[1]);
+                
+                mesh.a_color.data.push(
+                    1,1,0,
+                    0,1,1,
+                    1,0,1
+                );
             }
         }
+        //console.log((twgl.createBuffersFromArrays(renderer.gl, mesh)));
+        */
 
         mesh.a_position.data = new Float32Array(mesh.a_position.data);
         mesh.a_color.data = new Float32Array(mesh.a_color.data);
@@ -325,14 +363,34 @@ window.levelParser = {
         //console.log(mesh);
 
         levelData.subsectors[subSectorID].mesh = twgl.createBufferInfoFromArrays(renderer.gl, mesh);
-        //console.log((twgl.createBuffersFromArrays(renderer.gl, mesh)));
+    },
+
+    sectorToFlat:(sector,sectorID) => {
+        console.log(sector.lines);
+        const levelData = window.levelParser.levelData;
+        let points = [];
+        sector.lines.forEach(line => {
+            const lineDef = levelData.linedefs[line];
+            console.log(lineDef);
+            const vertex = [levelData.vertices[lineDef.start][0],levelData.vertices[lineDef.start][1]];
+            vertex.push(Math.atan2(vertex[0],vertex[1]));
+            points.push(levelData.vertices[lineDef.start]);
+        });
+        points = [...new Set(points)];
+        console.log(points);
     },
 
     parseMesh:() => {
-        window.levelParser.getBSPTreeForSubSectors();
+        window.levelParser.getLinesForSectors();
         const subSectors = window.levelParser.levelData.subsectors;
+        const sectors = window.levelParser.levelData.sectors;
         for (let subSectorID = 0; subSectorID < subSectors.length; subSectorID++) {
             window.levelParser.subSectorToMesh(subSectors[subSectorID],subSectorID);
+        }
+
+        //Flats I got tired of BSP not really working in my favour
+        for (let sectorID = 0; sectorID < sectors.length; sectorID++) {
+            window.levelParser.sectorToFlat(sectors[sectorID],sectorID);
         }
     },
 };
