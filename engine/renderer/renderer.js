@@ -3,7 +3,11 @@ window.renderer = {
     shaders:{},
     camera: [0,1,0,0,1,0,0,1,0],
     create:(canvas) => {
-        window.renderer.gl = canvas.getContext("webgl", {antialias:false});
+        window.renderer.gl = canvas.getContext("webgl", {
+            antialias:false,
+            preserveDrawingBuffer:true,
+            premultipliedAlpha:true
+        });
         window.renderer.shaders.unlit = twgl.createProgramInfo(window.renderer.gl,[
             `
             attribute highp vec3 a_position;

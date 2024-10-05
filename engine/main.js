@@ -34,8 +34,8 @@ window.wadRead = () => {
     window.pallete.readPlayPal();
 
     setInterval(() => {
-        renderer.gl.clear(renderer.gl.COLOR_BUFFER_BIT | renderer.gl.DEPTH_BUFFER_BIT);
         let aspectRatio = renderer.gl.canvas.width / renderer.gl.canvas.height;
+        renderer.gl.clear(renderer.gl.DEPTH_BUFFER_BIT);
         if (levelParser.levelData) {
             //Entity Update Routine
             if (levelParser.levelData.things) {

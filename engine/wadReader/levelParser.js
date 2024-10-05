@@ -363,28 +363,85 @@ window.levelParser = {
         //Add required points
         sector.lines.forEach(line => {
             const lineDef = levelData.linedefs[line[0]];
-            points.push((line[1]) ? [levelData.vertices[lineDef.end][0],levelData.vertices[lineDef.end][1]] : [levelData.vertices[lineDef.start][0],levelData.vertices[lineDef.start][1]]);
+            points.push((line[1]) ? 
+            [levelData.vertices[lineDef.end][0],levelData.vertices[lineDef.end][1],levelData.vertices[lineDef.start][0],levelData.vertices[lineDef.start][1]] : 
+            [levelData.vertices[lineDef.start][0],levelData.vertices[lineDef.start][1],levelData.vertices[lineDef.end][0],levelData.vertices[lineDef.end][1]]);
         });
 
-        let median = [points[0][0],points[0][1]];
+        let median = [0,0];
 
         //Find the mean point
-        for (let index = 1; index < points.length; index++) {
+        //and also find connected points
+        for (let index = 0; index < points.length; index++) {
+            for (let index2 = 0; index2 < points.length; index2++) {
+                if (points[index2][2] == points[index][0] && points[index2][3] == points[index][1]) {
+                    points[index][4] = index2;
+                    break;
+                }
+            }
+
+            //A check for when we do 
+            points[index][5] = false;
+
             median[0] += points[index][0];
             median[1] += points[index][1];
         }
+
         median[0] /= points.length;
         median[1] /= points.length;
 
         //Remove duplicate points
         points = [...new Set(points)];
-        
-        points.sort((a,b)=> [
-            Math.atan2(a[1] - median[1],a[0] - median[0]) - Math.atan2(b[1] - median[1],b[0] - median[0])
-        ]);
+
+        //points.sort((a,b) => {
+        //    if (a[0] - median[0] >= 0 && b[0] - median[0] < 0)
+        //        return 1;
+        //    if (a[0] - median[0] < 0 && b[0] - median[0] >= 0)
+        //        return -1;
+        //    if (a[0] - median[0] == 0 && b[0] - median[0] == 0) {
+        //        if (a[1] - median[1] >= 0 || b[1] - median[1] >= 0)
+        //            return a[1] - b[1];
+        //        return b[1] - a[1];
+        //    }
+        //
+        //    // compute the cross product of vectors (median -> a) x (median -> b)
+        //    const det = (a[0] - median[0]) * (b[1] - median[1]) - (b[0] - median[0]) * (a[1] - median[1]);
+        //    if (det < 0)
+        //        return 1;
+        //    if (det > 0)
+        //        return -1;
+        //
+        //    // points a and b are on the same line from the median
+        //    // check which point is closer to the median
+        //    const d1 = (a[0] - median[0]) * (a[0] - median[0]) + (a[1] - median[1]) * (a[1] - median[1]);
+        //    const d2 = (b[0] - median[0]) * (b[0] - median[0]) + (b[1] - median[1]) * (b[1] - median[1]);
+        //    return d1 - d2;
+        //})
+        points.sort((a,b)=> {
+            return a[4] - b[4];
+        });
+
+        console.log(sectorID);
 
         //Cut em
-        const cut = (points.length == 3) ? [0,1,2] : earcut(points.flat(),holes);
+        let cut = (points.length == 3) ? [0,1,2] : earcut(points.flat(),holes,6);
+
+        cut.forEach(point => {
+            points[point][5] = true;
+        })
+        
+        if (!points.every((currentValue) => currentValue[5] == true)) {
+                points.sort((a,b)=> {
+                    return (Math.atan2(a[1] - median[1],a[0] - median[0]) - Math.atan2(b[1] - median[1],b[0] - median[0]));//Math.abs(
+                });
+
+                for (let index = 0; index < points.length; index++) {
+                    points[index].splice(2, points[index].length - 2);
+                }
+
+                cut = (points.length == 3) ? [0,1,2] : earcut(points.flat(),holes);
+        }
+        console.log(cut)
 
         for (let index = 0; index < cut.length; index+=3) {
             const p1 = points[cut[index]];
