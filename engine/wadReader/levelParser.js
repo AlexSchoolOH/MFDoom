@@ -24,9 +24,6 @@ window.levelParser = {
         },14);
 
         window.levelParser.levelData.sectors = wad.ReadLump(LumpID + wad.mapIndicies.SECTOR, (offset) => {
-            console.log(`Sector id ${offset}`);
-            console.log(wad.Read2Bytes(offset,true));
-            console.log(wad.Read2Bytes(offset + 2,true));
             return {
                 floorHeight:wad.Read2Bytes(offset,true),
                 ceilingHeight:wad.Read2Bytes(offset + 2,true),
@@ -69,11 +66,21 @@ window.levelParser = {
         },4);
 
         window.levelParser.levelData.nodes = wad.ReadLump(LumpID + wad.mapIndicies.NODE, (offset) => {
+            let DX = Math.pow(wad.Read2Bytes(offset + 4,true),2);
+            let DY = Math.pow(wad.Read2Bytes(offset + 6,true),2);
+
+            if (isNaN(DX)) {
+                DX = 0;
+            }
+            if (isNaN(DY)) {
+                DY = 0;
+            }
+            const distance = Math.sqrt(DX + DY);
             return {
                 x:wad.Read2Bytes(offset,true),
                 y:wad.Read2Bytes(offset + 2,true),
-                dx:wad.Read2Bytes(offset + 4,true),
-                dy:wad.Read2Bytes(offset + 6,true),
+                dx:wad.Read2Bytes(offset + 4,true) / distance,
+                dy:wad.Read2Bytes(offset + 6,true) /  distance,
                 right: [
                     wad.Read2Bytes(offset + 8,true),
                     wad.Read2Bytes(offset + 10,true),
@@ -126,34 +133,50 @@ window.levelParser = {
             return {};
         },1);
 
-        console.log(`${window.levelParser.levelData.ID} has`)
-        console.log(`${window.levelParser.levelData.vertices.length} verts`);
-        console.log(`${window.levelParser.levelData.linedefs.length} lines`);
-        console.log(`${window.levelParser.levelData.sectors.length} sectors`);
-        console.log(`${window.levelParser.levelData.sideDefs.length} sides`);
-        console.log(`${window.levelParser.levelData.segs.length} segments`);
-        console.log(`${window.levelParser.levelData.subsectors.length} subsectors`);
-        console.log(`${window.levelParser.levelData.nodes.length} nodes`);
-        console.log(`${window.levelParser.levelData.blockmap.length} blocks`);
-        console.log(`${window.levelParser.levelData.reject.length} rejects`);
-        console.log(`${window.levelParser.levelData.things.length} things`);
-
         window.levelParser.parseMesh();
     },
 
-    //Doing this because triangulating segs is a pain in the arse.
-    getLinesForSectors:() => {
+    //Trying something different
+    getLinesForSectors() {
         const levelData = window.levelParser.levelData;
-        for (let lineDefID = 0; lineDefID < levelData.linedefs.length; lineDefID++) {
-            const lineDef = levelData.linedefs[lineDefID];
-
-            if (lineDef.front != 65535) {
-                const sideDef = levelData.sideDefs[lineDef.front];
-                window.levelParser.levelData.sectors[sideDef.sector].lines.push([lineDefID,false]);
+        for (let index = 0; index < levelData.linedefs.length; index++) {
+            const linedef = levelData.linedefs[index];
+            let front = linedef.front;
+            if (front != 65535) {
+                window.levelParser.levelData.sectors[levelData.sideDefs[front].sector].lines.push([index,false]);
             }
-            if (lineDef.back != 65535) {
-                const sideDef = levelData.sideDefs[lineDef.back];
-                window.levelParser.levelData.sectors[sideDef.sector].lines.push([lineDefID,true]);
+            let back = linedef.back;
+            if (back != 65535) {
+                window.levelParser.levelData.sectors[levelData.sideDefs[back].sector].lines.push([index,true]);
+            }
+        }
+    },
+
+    //Doing this because triangulating segs is a pain in the arse.
+    //And I really need these paths to calculate the BSP differentials from a subsector
+    getBSPTreeForSubSectors:(startingNode,path) => {
+        const levelData = window.levelParser.levelData;
+        if (typeof startingNode === "undefined") {
+            window.levelParser.getBSPTreeForSubSectors(levelData.nodes.length - 1, []);
+        }
+        else {
+            const currentNode = levelData.nodes[startingNode];
+            path.push(startingNode);
+
+            if (currentNode.rightChild >= bsp.subSectorID) {
+                startingNode = currentNode.rightChild - bsp.subSectorID;
+                window.levelParser.levelData.subsectors[startingNode].path = path;
+            }
+            else {
+                window.levelParser.getBSPTreeForSubSectors(currentNode.rightChild,[...path]);
+            }
+
+            if (currentNode.leftChild >= bsp.subSectorID) {
+                startingNode = currentNode.leftChild - bsp.subSectorID;
+                window.levelParser.levelData.subsectors[startingNode].path = path;
+            }
+            else {
+                window.levelParser.getBSPTreeForSubSectors(currentNode.leftChild,[...path]);
             }
         }
     },
@@ -251,6 +274,36 @@ window.levelParser = {
             }
         }
 
+        /* Imma stop doing subsectors for floors.
+        for (let i_line = 0; i_line < subSector.path.length - 1; i_line++) {
+            for (let j_line = i_line + 1; j_line < subSector.path.length; j_line++) {
+                console.log(`i ${i_line} j ${j_line}`);
+                const node1 = levelData.nodes[subSector.path[i_line]];
+                const node2 = levelData.nodes[subSector.path[j_line]];
+                console.log(node1);
+                console.log(node2);
+                const point = bsp.findIntersection(node1,node2);
+                if (!point) continue;
+                console.log(`calculated point ${JSON.stringify(point)}`);
+
+                let dist = (l) => bsp.perpDot(point,[l.dx,l.dy]) + bsp.perpDot([l.dx,l.dy],[l.x,l.y]);
+                let within_bsp = (d) => d >= -1e-3;
+                let within_seg = (d) => d <= 10;
+                let convert = (l) => levelData.nodes[l];
+                //The intersection point must lie both within the BSP volume
+                //and the segs volume.
+                let inside_bsp_and_segs = subSector.path.map(convert).map(dist).every(within_bsp)
+                    && subSector.path.map(convert).map(dist).every(within_seg);
+                if (inside_bsp_and_segs) {
+                    points.push(point);
+                    console.log(`Added point ${JSON.stringify(point)}`);
+                }
+                else {
+                    console.log(`Refused point ${JSON.stringify(point)}`);
+                }
+            }
+        }
+
         //Floor
         if (points.length >= 3) {
             points.sort((a,b)=> a[2] - b[2]);
@@ -258,18 +311,14 @@ window.levelParser = {
                 points[index].splice(2, points[index].length - 2);
             }
             const cut = (points.length == 3) ? [0,1,2] : earcut(points.flat());
-            console.log(JSON.stringify(points));
-            console.log(JSON.stringify(cut));
+            //console.log(JSON.stringify(points));
+            //console.log(JSON.stringify(cut));
             for (let index = 0; index < cut.length; index+=3) {
                 const p1 = points[cut[index]];
                 const p2 = points[cut[index+1]];
                 const p3 = points[cut[index+2]];
                 
                 mesh.a_position.data.push(p1[0],mainSector.floorHeight,p1[1]);
-                console.log(p1[0],p1[1])
-                console.log(p2[0],p2[1])
-                console.log(p3[0],p3[1])
-                console.log(mainSector.floorHeight)
                 mesh.a_position.data.push(p2[0],mainSector.floorHeight,p2[1]);
                 mesh.a_position.data.push(p3[0],mainSector.floorHeight,p3[1]);
                 
@@ -278,10 +327,20 @@ window.levelParser = {
                     0,1,1,
                     1,0,1
                 );
-
-                console.log("cut added " + index)
+                
+                mesh.a_position.data.push(p1[0],mainSector.ceilingHeight,p1[1]);
+                mesh.a_position.data.push(p3[0],mainSector.ceilingHeight,p3[1]);
+                mesh.a_position.data.push(p2[0],mainSector.ceilingHeight,p2[1]);
+                
+                mesh.a_color.data.push(
+                    1,1,0,
+                    0,1,1,
+                    1,0,1
+                );
             }
         }
+        //console.log((twgl.createBuffersFromArrays(renderer.gl, mesh)));
+        */
 
         mesh.a_position.data = new Float32Array(mesh.a_position.data);
         mesh.a_color.data = new Float32Array(mesh.a_color.data);
@@ -289,14 +348,84 @@ window.levelParser = {
         //console.log(mesh);
 
         levelData.subsectors[subSectorID].mesh = twgl.createBufferInfoFromArrays(renderer.gl, mesh);
-        //console.log((twgl.createBuffersFromArrays(renderer.gl, mesh)));
+    },
+
+    sectorToFlat:(sector,sectorID) => {
+        const mesh = {
+            a_position:{ numComponents: 3, data: []},
+            a_color:{ numComponents: 3, data: []},
+        };
+
+        const levelData = window.levelParser.levelData;
+        let points = [];
+        let holes = [];
+
+        //Add required points
+        sector.lines.forEach(line => {
+            const lineDef = levelData.linedefs[line[0]];
+            points.push((line[1]) ? [levelData.vertices[lineDef.end][0],levelData.vertices[lineDef.end][1]] : [levelData.vertices[lineDef.start][0],levelData.vertices[lineDef.start][1]]);
+        });
+
+        let median = [points[0][0],points[0][1]];
+
+        //Find the mean point
+        for (let index = 1; index < points.length; index++) {
+            median[0] += points[index][0];
+            median[1] += points[index][1];
+        }
+        median[0] /= points.length;
+        median[1] /= points.length;
+
+        //Remove duplicate points
+        points = [...new Set(points)];
+        
+        points.sort((a,b)=> [
+            Math.atan2(a[1] - median[1],a[0] - median[0]) - Math.atan2(b[1] - median[1],b[0] - median[0])
+        ]);
+
+        //Cut em
+        const cut = (points.length == 3) ? [0,1,2] : earcut(points.flat(),holes);
+
+        for (let index = 0; index < cut.length; index+=3) {
+            const p1 = points[cut[index]];
+            const p2 = points[cut[index+1]];
+            const p3 = points[cut[index+2]];
+            
+            mesh.a_position.data.push(p1[0],sector.floorHeight,p1[1]);
+            mesh.a_position.data.push(p2[0],sector.floorHeight,p2[1]);
+            mesh.a_position.data.push(p3[0],sector.floorHeight,p3[1]);
+            
+            mesh.a_color.data.push(
+                1,1,0,
+                0,1,1,
+                1,0,1
+            );
+            
+            mesh.a_position.data.push(p1[0],sector.ceilingHeight,p1[1]);
+            mesh.a_position.data.push(p3[0],sector.ceilingHeight,p3[1]);
+            mesh.a_position.data.push(p2[0],sector.ceilingHeight,p2[1]);
+            
+            mesh.a_color.data.push(
+                1,0,1,
+                0,1,1,
+                0,0,1
+            );
+        }
+
+        levelData.sectors[sectorID].mesh = twgl.createBufferInfoFromArrays(renderer.gl, mesh);
     },
 
     parseMesh:() => {
         window.levelParser.getLinesForSectors();
         const subSectors = window.levelParser.levelData.subsectors;
+        const sectors = window.levelParser.levelData.sectors;
         for (let subSectorID = 0; subSectorID < subSectors.length; subSectorID++) {
             window.levelParser.subSectorToMesh(subSectors[subSectorID],subSectorID);
+        }
+
+        //Flats I got tired of BSP not really working in my favour
+        for (let sectorID = 0; sectorID < sectors.length; sectorID++) {
+            window.levelParser.sectorToFlat(sectors[sectorID],sectorID);
         }
     },
 };

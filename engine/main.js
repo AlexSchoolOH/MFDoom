@@ -31,8 +31,11 @@ window.wadRead = () => {
         console.error("No first map.");
     }
 
+    window.pallete.readPlayPal();
+
     setInterval(() => {
         renderer.gl.clear(renderer.gl.COLOR_BUFFER_BIT | renderer.gl.DEPTH_BUFFER_BIT);
+        let aspectRatio = renderer.gl.canvas.width / renderer.gl.canvas.height;
         if (levelParser.levelData) {
             //Entity Update Routine
             if (levelParser.levelData.things) {
@@ -43,14 +46,20 @@ window.wadRead = () => {
 
             //Level Draw Routine
             if (levelParser.levelData.sectors) {
-                renderer.gl.viewport(0, 0, 600, 300);
+                renderer.gl.viewport(0, 0, renderer.gl.canvas.width, renderer.gl.canvas.height);
                 renderer.gl.useProgram(renderer.shaders.unlit.program);
-                twgl.setUniforms(renderer.shaders.unlit,{u_camera:renderer.camera});
+                twgl.setUniforms(renderer.shaders.unlit,{u_camera:renderer.camera, u_aspect:aspectRatio});
     
                 levelParser.levelData.subsectors.forEach(subsector => {
                     if (!subsector.mesh) return;
                     twgl.setBuffersAndAttributes(renderer.gl, renderer.shaders.unlit, subsector.mesh);
                     twgl.drawBufferInfo(renderer.gl, subsector.mesh);
+                });
+    
+                levelParser.levelData.sectors.forEach(sector => {
+                    if (!sector.mesh) return;
+                    twgl.setBuffersAndAttributes(renderer.gl, renderer.shaders.unlit, sector.mesh);
+                    twgl.drawBufferInfo(renderer.gl, sector.mesh);
                 });
             }
         }
