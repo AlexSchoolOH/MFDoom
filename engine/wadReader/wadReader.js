@@ -56,7 +56,7 @@ window.wad = {
     ReadString:(offset,length) => {
         let string = "";
         for (let index = 0; index < length; index++) {
-            const character = String.fromCharCode(window.wad.ReadBytes(offset + index,1));
+            const character = ascii[window.wad.ReadBytes(offset + index,1)];
             if (window.wad.ReadBytes(offset + index,1) >= 10) {
                 string += character;
             }

@@ -7,7 +7,7 @@ window.pallete = {
         window.pallete.use = 0;
         window.pallete.palletes = [];
         if (wad.FindFirstLumpOfName("PLAYPAL") >= 0) {
-            window.pallete.use = 0;
+            window.pallete.use = 1;
 
             //Read the PlayPal
             const palleteID = wad.FindFirstLumpOfName("PLAYPAL");

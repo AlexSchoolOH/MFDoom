@@ -21,6 +21,8 @@ window.wadRead = () => {
         });
     }
 
+    window.textures.registerAll();
+
     if (wad.FindFirstLumpOfName("MAP01") >= 0) {
         levelParser.read("MAP01");
     }

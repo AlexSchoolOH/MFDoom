@@ -421,8 +421,6 @@ window.levelParser = {
             return a[4] - b[4];
         });
 
-        console.log(sectorID);
-
         //Cut em
         let cut = (points.length == 3) ? [0,1,2] : earcut(points.flat(),holes,6);
 
@@ -441,32 +439,35 @@ window.levelParser = {
 
                 cut = (points.length == 3) ? [0,1,2] : earcut(points.flat(),holes);
         }
-        console.log(cut)
 
         for (let index = 0; index < cut.length; index+=3) {
             const p1 = points[cut[index]];
             const p2 = points[cut[index+1]];
             const p3 = points[cut[index+2]];
-            
-            mesh.a_position.data.push(p1[0],sector.floorHeight,p1[1]);
-            mesh.a_position.data.push(p2[0],sector.floorHeight,p2[1]);
-            mesh.a_position.data.push(p3[0],sector.floorHeight,p3[1]);
-            
-            mesh.a_color.data.push(
-                1,1,0,
-                0,1,1,
-                1,0,1
-            );
-            
-            mesh.a_position.data.push(p1[0],sector.ceilingHeight,p1[1]);
-            mesh.a_position.data.push(p3[0],sector.ceilingHeight,p3[1]);
-            mesh.a_position.data.push(p2[0],sector.ceilingHeight,p2[1]);
-            
-            mesh.a_color.data.push(
-                1,0,1,
-                0,1,1,
-                0,0,1
-            );
+
+            if (sector.floorFlat != "F_SKY") {
+                mesh.a_position.data.push(p1[0],sector.floorHeight,p1[1]);
+                mesh.a_position.data.push(p2[0],sector.floorHeight,p2[1]);
+                mesh.a_position.data.push(p3[0],sector.floorHeight,p3[1]);
+                
+                mesh.a_color.data.push(
+                    1,1,0,
+                    0,1,1,
+                    1,0,1
+                );
+            }
+
+            if (sector.ceilFlat != "F_SKY") {
+                mesh.a_position.data.push(p1[0],sector.ceilingHeight,p1[1]);
+                mesh.a_position.data.push(p3[0],sector.ceilingHeight,p3[1]);
+                mesh.a_position.data.push(p2[0],sector.ceilingHeight,p2[1]);
+                
+                mesh.a_color.data.push(
+                    1,0,1,
+                    0,1,1,
+                    0,0,1
+                );
+            }
         }
 
         levelData.sectors[sectorID].mesh = twgl.createBufferInfoFromArrays(renderer.gl, mesh);
