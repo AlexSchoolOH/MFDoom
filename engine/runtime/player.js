@@ -49,8 +49,8 @@ entities.player = class extends entities.base {
 
         if (window.inputs.keys["1"]) this.angle -= 0.05;
         if (window.inputs.keys["2"]) this.angle += 0.05;
-        if (window.inputs.keys["1"]) this.roll -= 0.025;
-        if (window.inputs.keys["2"]) this.roll += 0.025;
+        if (window.inputs.keys["1"]) this.roll -= 0.0125;
+        if (window.inputs.keys["2"]) this.roll += 0.0125;
 
         this.roll *= 0.925;
 

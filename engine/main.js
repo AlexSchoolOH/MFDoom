@@ -21,9 +21,11 @@ window.wadRead = () => {
         });
     }
 
+    decorate.parse();
+
     //Graphic
-    window.pallete.readPlayPal();
-    window.textures.registerAll();
+    pallete.readPlayPal();
+    textures.registerAll();
 
     if (wad.FindFirstLumpOfName("MAP01") >= 0) {
         levelParser.read("MAP01");
