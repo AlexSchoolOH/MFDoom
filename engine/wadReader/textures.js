@@ -60,11 +60,10 @@ window.textures = {
                     textureArray[((X * width) + Y + XOffset) * 4 + 1] = /*(Y/texture.height) * 255*/pallete.palletes[pallete.currentPallete][textureIndexes[pos]][1] * 255;
                     textureArray[((X * width) + Y + XOffset) * 4 + 2] = pallete.palletes[pallete.currentPallete][textureIndexes[pos]][2] * 255;
                     textureArray[((X * width) + Y + XOffset) * 4 + 3] = 255;
-                    console.log(`X:${X} Y:${Y} | ` + pos);
                 }
             }
 
-            texture.position = [XOffset / width, 0, (XOffset + texture.width) / width, texture.height / maxHeight];
+            texture.position = [XOffset / width, 0, texture.width / width, texture.height / maxHeight];
 
             XOffset += texture.width;
         }

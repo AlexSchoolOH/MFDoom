@@ -244,7 +244,14 @@ window.levelParser = {
                     0,1,
                 );
 
-                mesh.a_texBound.data.push(...(textures.textureDefs[frontSideDef.middle].position.repeat(3)));
+                mesh.a_texBound.data.push(
+                    ...textures.textureDefs[frontSideDef.middle].position,
+                    ...textures.textureDefs[frontSideDef.middle].position,
+                    ...textures.textureDefs[frontSideDef.middle].position,
+                    ...textures.textureDefs[frontSideDef.middle].position,
+                    ...textures.textureDefs[frontSideDef.middle].position,
+                    ...textures.textureDefs[frontSideDef.middle].position
+                );
             }
             else {
                 //Ceiling
@@ -274,7 +281,14 @@ window.levelParser = {
                         0,1,
                     );
 
-                    mesh.a_texBound.data.push(...(textures.textureDefs[frontSideDef.upper].position.repeat(3)));
+                    mesh.a_texBound.data.push(
+                        ...textures.textureDefs[frontSideDef.upper].position,
+                        ...textures.textureDefs[frontSideDef.upper].position,
+                        ...textures.textureDefs[frontSideDef.upper].position,
+                        ...textures.textureDefs[frontSideDef.upper].position,
+                        ...textures.textureDefs[frontSideDef.upper].position,
+                        ...textures.textureDefs[frontSideDef.upper].position
+                    );
                 }
                 
                 //floor
@@ -304,7 +318,14 @@ window.levelParser = {
                         0,1,
                     );
 
-                    mesh.a_texBound.data.push(...(textures.textureDefs[frontSideDef.lower].position.repeat(3)));
+                    mesh.a_texBound.data.push(
+                        ...textures.textureDefs[frontSideDef.lower].position,
+                        ...textures.textureDefs[frontSideDef.lower].position,
+                        ...textures.textureDefs[frontSideDef.lower].position,
+                        ...textures.textureDefs[frontSideDef.lower].position,
+                        ...textures.textureDefs[frontSideDef.lower].position,
+                        ...textures.textureDefs[frontSideDef.lower].position
+                    );
                 }
             }
         }
@@ -499,7 +520,11 @@ window.levelParser = {
                     1,1,
                 );
 
-                mesh.a_texBound.data.push(...(textures.textureDefs[sector.floorFlat].position.repeat(3)));
+                mesh.a_texBound.data.push(
+                    ...textures.textureDefs[sector.floorFlat].position,
+                    ...textures.textureDefs[sector.floorFlat].position,
+                    ...textures.textureDefs[sector.floorFlat].position
+                );
             }
 
             if (sector.ceilFlat != "F_SKY") {
@@ -519,7 +544,11 @@ window.levelParser = {
                     1,1,
                 );
 
-                mesh.a_texBound.data.push(...(textures.textureDefs[sector.ceilFlat].position.repeat(3)));
+                mesh.a_texBound.data.push(
+                    ...textures.textureDefs[sector.ceilFlat].position,
+                    ...textures.textureDefs[sector.ceilFlat].position,
+                    ...textures.textureDefs[sector.ceilFlat].position
+                );
             }
         }
 

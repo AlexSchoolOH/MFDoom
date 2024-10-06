@@ -63,7 +63,7 @@ window.renderer = {
                 coord = fract(coord);
                 coord *= v_texBound.zw;
                 coord += v_texBound.xy;
-                gl_FragColor = texture2D(u_texture,v_texCoord); //* vec4(v_color,1);
+                gl_FragColor = texture2D(u_texture,coord); //* vec4(v_color,1);
                 gl_FragColor.xyz *= gl_FragColor.w;
 
                 if (gl_FragColor.a == 0.0) {
