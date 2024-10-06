@@ -54,11 +54,12 @@ window.textures = {
             for (let Y = 0; Y < texture.height; Y++) {
                 for (let X = 0; X < texture.width; X++) {
                     //R=0 G=1 B=2 A=3
-                    textureArray[((Y * width) + X + XOffset) * 4] = (X/texture.width) * 255//pallete.palletes[pallete.currentPallete][textureIndexes[(Y * texture.width) + X]][0] * 255;
-                    textureArray[((Y * width) + X + XOffset) * 4 + 1] = (Y/texture.height) * 255//pallete.palletes[pallete.currentPallete][textureIndexes[(Y * texture.width) + X]][1] * 255;
-                    textureArray[((Y * width) + X + XOffset) * 4 + 2] = pallete.palletes[pallete.currentPallete][textureIndexes[(Y * texture.width) + X]][2] * 255;
-                    textureArray[((Y * width) + X + XOffset) * 4 + 3] = 255;
-                    console.log(`X:${X} Y:${Y} | ` + ((Y * texture.width) + X));
+                    const pos = (Y * (texture.width + 5)) + X + 3;
+                    textureArray[((X * width) + Y + XOffset) * 4] = /*(X/texture.width) * 255*/pallete.palletes[pallete.currentPallete][textureIndexes[pos]][0] * 255;
+                    textureArray[((X * width) + Y + XOffset) * 4 + 1] = /*(Y/texture.height) * 255*/pallete.palletes[pallete.currentPallete][textureIndexes[pos]][1] * 255;
+                    textureArray[((X * width) + Y + XOffset) * 4 + 2] = pallete.palletes[pallete.currentPallete][textureIndexes[pos]][2] * 255;
+                    textureArray[((X * width) + Y + XOffset) * 4 + 3] = 255;
+                    console.log(`X:${X} Y:${Y} | ` + pos);
                 }
             }
 
