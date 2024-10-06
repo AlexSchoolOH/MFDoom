@@ -15,7 +15,6 @@ window.textures = {
         let width = 0;
 
         AsciiDeclarations.forEach(texture => {
-            console.log(texture);
             const name = texture.match(/".*"/g)[0].replaceAll("\"","");
             const initilization = texture.split("\n")[0].split(",");
             const texWidth = Number(initilization[1].replaceAll(/\s/g,""));

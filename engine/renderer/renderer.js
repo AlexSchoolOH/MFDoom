@@ -56,6 +56,7 @@ window.renderer = {
             uniform highp float u_usePallete;
 
             uniform sampler2D u_texture;
+            uniform highp float u_sectorBrightness;
 
             void main()
             {
@@ -65,6 +66,7 @@ window.renderer = {
                 coord += v_texBound.xy;
                 gl_FragColor = texture2D(u_texture,coord); //* vec4(v_color,1);
                 gl_FragColor.xyz *= gl_FragColor.w;
+                gl_FragColor.xyz *= u_sectorBrightness / 255.0;
 
                 if (gl_FragColor.a == 0.0) {
                     discard;

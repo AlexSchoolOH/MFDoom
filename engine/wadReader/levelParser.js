@@ -216,6 +216,11 @@ window.levelParser = {
             const frontSector = levelData.sectors[frontSideDef.sector];
             const backSector = levelData.sectors[backSideDef.sector];
 
+            const distance = Math.sqrt(
+                Math.pow(levelData.vertices[seg.end][0] - levelData.vertices[seg.start][0],2) +
+                Math.pow(levelData.vertices[seg.end][1] - levelData.vertices[seg.start][1],2)
+            )
+
             //The actual wall
             if (linedef.back == 65535) {
                 //UGHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH
@@ -226,6 +231,17 @@ window.levelParser = {
                 mesh.a_position.data.push(levelData.vertices[seg.end][0],  frontSector.ceilingHeight,levelData.vertices[seg.end][1]);
                 mesh.a_position.data.push(levelData.vertices[seg.start][0],frontSector.ceilingHeight,levelData.vertices[seg.start][1]);
     
+                const textureWidthMiddle = 64 * (textures.textureDefs[frontSideDef.middle].width / 64);
+                const textureHeightMiddle = 64 * (textures.textureDefs[frontSideDef.middle].height / 64);
+
+                const OffsetX = frontSideDef.x / textureWidthMiddle;
+                const OffsetY = frontSideDef.y / textureHeightMiddle;
+
+                const heightDifferenceMiddle = (frontSector.ceilingHeight - frontSector.floorHeight);
+
+                const segEnd = (distance / textureWidthMiddle) + OffsetX;
+                const topEnd = (heightDifferenceMiddle / textureHeightMiddle) + OffsetY;
+
                 mesh.a_color.data.push(
                     1,0,0,
                     0,0,0,
@@ -236,12 +252,12 @@ window.levelParser = {
                 );
 
                 mesh.a_texCoord.data.push(
-                    0,0,
-                    1,0,
-                    1,1,
-                    0,0,
-                    1,1,
-                    0,1,
+                    OffsetX,topEnd,
+                    segEnd,topEnd,
+                    segEnd,OffsetY,
+                    OffsetX,topEnd,
+                    segEnd,OffsetY,
+                    OffsetX,OffsetY,
                 );
 
                 mesh.a_texBound.data.push(
@@ -262,6 +278,16 @@ window.levelParser = {
                     mesh.a_position.data.push(levelData.vertices[seg.start][0],backSector.ceilingHeight,levelData.vertices[seg.start][1]);
                     mesh.a_position.data.push(levelData.vertices[seg.end][0],  frontSector.ceilingHeight,levelData.vertices[seg.end][1]);
                     mesh.a_position.data.push(levelData.vertices[seg.start][0],frontSector.ceilingHeight,levelData.vertices[seg.start][1]);
+
+                    const heightDifferenceUpper = frontSector.ceilingHeight - backSector.ceilingHeight;    
+                    const textureWidthUpper = 64 * (textures.textureDefs[frontSideDef.upper].width / 64);
+                    const textureHeightUpper = 64 * (textures.textureDefs[frontSideDef.upper].height / 64);
+    
+                    const OffsetX = frontSideDef.x / textureWidthUpper;
+                    const OffsetY = frontSideDef.y / textureHeightUpper;
+    
+                    const segEnd = (distance / textureWidthUpper) + OffsetX;
+                    const topEnd = (heightDifferenceUpper / textureHeightUpper) + OffsetY;
         
                     mesh.a_color.data.push(
                         1,0,0,
@@ -273,12 +299,12 @@ window.levelParser = {
                     );
 
                     mesh.a_texCoord.data.push(
-                        0,0,
-                        1,0,
-                        1,1,
-                        0,0,
-                        1,1,
-                        0,1,
+                        OffsetX,topEnd,
+                        segEnd,topEnd,
+                        segEnd,OffsetY,
+                        OffsetX,topEnd,
+                        segEnd,OffsetY,
+                        OffsetX,OffsetY,
                     );
 
                     mesh.a_texBound.data.push(
@@ -299,6 +325,16 @@ window.levelParser = {
                     mesh.a_position.data.push(levelData.vertices[seg.start][0],frontSector.floorHeight,levelData.vertices[seg.start][1]);
                     mesh.a_position.data.push(levelData.vertices[seg.end][0],  backSector.floorHeight,levelData.vertices[seg.end][1]);
                     mesh.a_position.data.push(levelData.vertices[seg.start][0],backSector.floorHeight,levelData.vertices[seg.start][1]);
+
+                    const heightDifferenceLower = backSector.floorHeight - frontSector.floorHeight;    
+                    const textureWidthLower = 64 * (textures.textureDefs[frontSideDef.lower].width / 64);
+                    const textureHeightLower = 64 * (textures.textureDefs[frontSideDef.lower].height / 64);
+    
+                    const OffsetX = frontSideDef.x / textureWidthLower;
+                    const OffsetY = frontSideDef.y / textureHeightLower;
+    
+                    const segEnd = (distance / textureWidthLower) + OffsetX;
+                    const topEnd = (heightDifferenceLower / textureHeightLower) + OffsetY;
         
                     mesh.a_color.data.push(
                         1,0,0,
@@ -310,12 +346,12 @@ window.levelParser = {
                     );
 
                     mesh.a_texCoord.data.push(
-                        0,0,
-                        1,0,
-                        1,1,
-                        0,0,
-                        1,1,
-                        0,1,
+                        OffsetX,topEnd,
+                        segEnd,topEnd,
+                        segEnd,OffsetY,
+                        OffsetX,topEnd,
+                        segEnd,OffsetY,
+                        OffsetX,OffsetY,
                     );
 
                     mesh.a_texBound.data.push(
@@ -498,6 +534,12 @@ window.levelParser = {
                 cut = (points.length == 3) ? [0,1,2] : earcut(points.flat(),holes);
         }
 
+        const textureWidthFloor = 64 * (textures.textureDefs[sector.floorFlat].width / 64);
+        const textureHeightFloor = 64 * (textures.textureDefs[sector.floorFlat].height / 64);
+
+        const textureWidthCeiling = 64 * (textures.textureDefs[sector.ceilFlat].width / 64);
+        const textureHeightCeiling = 64 * (textures.textureDefs[sector.ceilFlat].height / 64);
+
         for (let index = 0; index < cut.length; index+=3) {
             const p1 = points[cut[index]];
             const p2 = points[cut[index+1]];
@@ -515,9 +557,9 @@ window.levelParser = {
                 );
 
                 mesh.a_texCoord.data.push(
-                    0,0,
-                    1,0,
-                    1,1,
+                    p1[0] / textureWidthFloor,p1[1] / textureHeightFloor,
+                    p2[0] / textureWidthFloor,p2[1] / textureHeightFloor,
+                    p3[0] / textureWidthFloor,p3[1] / textureHeightFloor
                 );
 
                 mesh.a_texBound.data.push(
@@ -539,9 +581,9 @@ window.levelParser = {
                 );
 
                 mesh.a_texCoord.data.push(
-                    0,0,
-                    1,0,
-                    1,1,
+                    p1[0] / textureWidthCeiling,p1[1] / textureHeightCeiling,
+                    p3[0] / textureWidthCeiling,p3[1] / textureHeightCeiling,
+                    p2[0] / textureWidthCeiling,p2[1] / textureHeightCeiling
                 );
 
                 mesh.a_texBound.data.push(
