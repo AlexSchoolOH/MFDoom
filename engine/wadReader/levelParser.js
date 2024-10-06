@@ -188,6 +188,7 @@ window.levelParser = {
             a_color:{ numComponents: 3, data: []},
             a_texCoord:{ numComponents: 2, data: []},
             a_texBound:{ numComponents: 4, data: []},
+            a_renderType:{ numComponents: 1, data: []},
         };
 
         let points = [];
@@ -268,6 +269,13 @@ window.levelParser = {
                     ...textures.textureDefs[frontSideDef.middle].position,
                     ...textures.textureDefs[frontSideDef.middle].position
                 );
+
+                mesh.a_renderType.data.push(0);
+                mesh.a_renderType.data.push(0);
+                mesh.a_renderType.data.push(0);
+                mesh.a_renderType.data.push(0);
+                mesh.a_renderType.data.push(0);
+                mesh.a_renderType.data.push(0);
             }
             else {
                 //Ceiling
@@ -315,6 +323,13 @@ window.levelParser = {
                         ...textures.textureDefs[frontSideDef.upper].position,
                         ...textures.textureDefs[frontSideDef.upper].position
                     );
+
+                    mesh.a_renderType.data.push((backSector.ceilFlat == "F_SKY") ? 1 : 0);
+                    mesh.a_renderType.data.push((backSector.ceilFlat == "F_SKY") ? 1 : 0);
+                    mesh.a_renderType.data.push((backSector.ceilFlat == "F_SKY") ? 1 : 0);
+                    mesh.a_renderType.data.push((backSector.ceilFlat == "F_SKY") ? 1 : 0);
+                    mesh.a_renderType.data.push((backSector.ceilFlat == "F_SKY") ? 1 : 0);
+                    mesh.a_renderType.data.push((backSector.ceilFlat == "F_SKY") ? 1 : 0);
                 }
                 
                 //floor
@@ -362,6 +377,13 @@ window.levelParser = {
                         ...textures.textureDefs[frontSideDef.lower].position,
                         ...textures.textureDefs[frontSideDef.lower].position
                     );
+
+                    mesh.a_renderType.data.push((backSector.floorFlat == "F_SKY") ? 1 : 0);
+                    mesh.a_renderType.data.push((backSector.floorFlat == "F_SKY") ? 1 : 0);
+                    mesh.a_renderType.data.push((backSector.floorFlat == "F_SKY") ? 1 : 0);
+                    mesh.a_renderType.data.push((backSector.floorFlat == "F_SKY") ? 1 : 0);
+                    mesh.a_renderType.data.push((backSector.floorFlat == "F_SKY") ? 1 : 0);
+                    mesh.a_renderType.data.push((backSector.floorFlat == "F_SKY") ? 1 : 0);
                 }
             }
         }
@@ -448,6 +470,7 @@ window.levelParser = {
             a_color:{ numComponents: 3, data: []},
             a_texCoord:{ numComponents: 2, data: []},
             a_texBound:{ numComponents: 4, data: []},
+            a_renderType:{ numComponents: 1, data: []},
         };
 
         const levelData = window.levelParser.levelData;
@@ -487,30 +510,6 @@ window.levelParser = {
         //Remove duplicate points
         points = [...new Set(points)];
 
-        //points.sort((a,b) => {
-        //    if (a[0] - median[0] >= 0 && b[0] - median[0] < 0)
-        //        return 1;
-        //    if (a[0] - median[0] < 0 && b[0] - median[0] >= 0)
-        //        return -1;
-        //    if (a[0] - median[0] == 0 && b[0] - median[0] == 0) {
-        //        if (a[1] - median[1] >= 0 || b[1] - median[1] >= 0)
-        //            return a[1] - b[1];
-        //        return b[1] - a[1];
-        //    }
-        //
-        //    // compute the cross product of vectors (median -> a) x (median -> b)
-        //    const det = (a[0] - median[0]) * (b[1] - median[1]) - (b[0] - median[0]) * (a[1] - median[1]);
-        //    if (det < 0)
-        //        return 1;
-        //    if (det > 0)
-        //        return -1;
-        //
-        //    // points a and b are on the same line from the median
-        //    // check which point is closer to the median
-        //    const d1 = (a[0] - median[0]) * (a[0] - median[0]) + (a[1] - median[1]) * (a[1] - median[1]);
-        //    const d2 = (b[0] - median[0]) * (b[0] - median[0]) + (b[1] - median[1]) * (b[1] - median[1]);
-        //    return d1 - d2;
-        //})
         points.sort((a,b)=> {
             return a[4] - b[4];
         });
@@ -522,6 +521,7 @@ window.levelParser = {
             points[point][5] = true;
         })
         
+        //If not all points are accounted for use method 2
         if (!points.every((currentValue) => currentValue[5] == true)) {
                 points.sort((a,b)=> {
                     return (Math.atan2(a[1] - median[1],a[0] - median[0]) - Math.atan2(b[1] - median[1],b[0] - median[0]));//Math.abs(
@@ -534,6 +534,7 @@ window.levelParser = {
                 cut = (points.length == 3) ? [0,1,2] : earcut(points.flat(),holes);
         }
 
+        //Calculate sizing
         const textureWidthFloor = 64 * (textures.textureDefs[sector.floorFlat].width / 64);
         const textureHeightFloor = 64 * (textures.textureDefs[sector.floorFlat].height / 64);
 
@@ -545,53 +546,59 @@ window.levelParser = {
             const p2 = points[cut[index+1]];
             const p3 = points[cut[index+2]];
 
-            if (sector.floorFlat != "F_SKY") {
-                mesh.a_position.data.push(p1[0],sector.floorHeight,p1[1]);
-                mesh.a_position.data.push(p2[0],sector.floorHeight,p2[1]);
-                mesh.a_position.data.push(p3[0],sector.floorHeight,p3[1]);
-                
-                mesh.a_color.data.push(
-                    1,1,0,
-                    0,1,1,
-                    1,0,1
-                );
+            //Floor mesher
+            mesh.a_position.data.push(p1[0],sector.floorHeight,p1[1]);
+            mesh.a_position.data.push(p2[0],sector.floorHeight,p2[1]);
+            mesh.a_position.data.push(p3[0],sector.floorHeight,p3[1]);
+            
+            mesh.a_color.data.push(
+                1,1,0,
+                0,1,1,
+                1,0,1
+            );
 
-                mesh.a_texCoord.data.push(
-                    p1[0] / textureWidthFloor,p1[1] / textureHeightFloor,
-                    p2[0] / textureWidthFloor,p2[1] / textureHeightFloor,
-                    p3[0] / textureWidthFloor,p3[1] / textureHeightFloor
-                );
+            mesh.a_texCoord.data.push(
+                p1[0] / textureWidthFloor,p1[1] / textureHeightFloor,
+                p2[0] / textureWidthFloor,p2[1] / textureHeightFloor,
+                p3[0] / textureWidthFloor,p3[1] / textureHeightFloor
+            );
 
-                mesh.a_texBound.data.push(
-                    ...textures.textureDefs[sector.floorFlat].position,
-                    ...textures.textureDefs[sector.floorFlat].position,
-                    ...textures.textureDefs[sector.floorFlat].position
-                );
-            }
+            mesh.a_texBound.data.push(
+                ...textures.textureDefs[sector.floorFlat].position,
+                ...textures.textureDefs[sector.floorFlat].position,
+                ...textures.textureDefs[sector.floorFlat].position
+            );
 
-            if (sector.ceilFlat != "F_SKY") {
-                mesh.a_position.data.push(p1[0],sector.ceilingHeight,p1[1]);
-                mesh.a_position.data.push(p3[0],sector.ceilingHeight,p3[1]);
-                mesh.a_position.data.push(p2[0],sector.ceilingHeight,p2[1]);
-                
-                mesh.a_color.data.push(
-                    1,0,1,
-                    0,1,1,
-                    0,0,1
-                );
+            mesh.a_renderType.data.push((sector.floorFlat == "F_SKY") ? 1 : 0);
+            mesh.a_renderType.data.push((sector.floorFlat == "F_SKY") ? 1 : 0);
+            mesh.a_renderType.data.push((sector.floorFlat == "F_SKY") ? 1 : 0);
 
-                mesh.a_texCoord.data.push(
-                    p1[0] / textureWidthCeiling,p1[1] / textureHeightCeiling,
-                    p3[0] / textureWidthCeiling,p3[1] / textureHeightCeiling,
-                    p2[0] / textureWidthCeiling,p2[1] / textureHeightCeiling
-                );
+            //Ceiling mesher
+            mesh.a_position.data.push(p1[0],sector.ceilingHeight,p1[1]);
+            mesh.a_position.data.push(p3[0],sector.ceilingHeight,p3[1]);
+            mesh.a_position.data.push(p2[0],sector.ceilingHeight,p2[1]);
+            
+            mesh.a_color.data.push(
+                1,0,1,
+                0,1,1,
+                0,0,1
+            );
 
-                mesh.a_texBound.data.push(
-                    ...textures.textureDefs[sector.ceilFlat].position,
-                    ...textures.textureDefs[sector.ceilFlat].position,
-                    ...textures.textureDefs[sector.ceilFlat].position
-                );
-            }
+            mesh.a_texCoord.data.push(
+                p1[0] / textureWidthCeiling,p1[1] / textureHeightCeiling,
+                p3[0] / textureWidthCeiling,p3[1] / textureHeightCeiling,
+                p2[0] / textureWidthCeiling,p2[1] / textureHeightCeiling
+            );
+
+            mesh.a_texBound.data.push(
+                ...textures.textureDefs[sector.ceilFlat].position,
+                ...textures.textureDefs[sector.ceilFlat].position,
+                ...textures.textureDefs[sector.ceilFlat].position
+            );
+
+            mesh.a_renderType.data.push((sector.ceilFlat == "F_SKY") ? 1 : 0);
+            mesh.a_renderType.data.push((sector.ceilFlat == "F_SKY") ? 1 : 0);
+            mesh.a_renderType.data.push((sector.ceilFlat == "F_SKY") ? 1 : 0);
         }
 
         levelData.sectors[sectorID].mesh = twgl.createBufferInfoFromArrays(renderer.gl, mesh);

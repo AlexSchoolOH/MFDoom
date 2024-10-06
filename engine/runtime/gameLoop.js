@@ -1,5 +1,3 @@
-
-
 setInterval(() => {
     let aspectRatio = renderer.gl.canvas.width / renderer.gl.canvas.height;
     renderer.gl.clear(renderer.gl.DEPTH_BUFFER_BIT);
