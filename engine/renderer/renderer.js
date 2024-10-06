@@ -15,6 +15,8 @@ window.renderer = {
             varying highp vec3 v_color;
             attribute highp vec2 a_texCoord;
             varying highp vec2 v_texCoord;
+            attribute highp vec4 a_texBound;
+            varying highp vec4 v_texBound;
 
             uniform highp mat3 u_camera;
             uniform highp float u_aspect;
@@ -39,6 +41,7 @@ window.renderer = {
             {
                 v_color = a_color;
                 v_texCoord = a_texCoord;
+                v_texBound = a_texBound;
                 highp vec3 transformed = transform(a_position,u_camera);
                 gl_Position = vec4(transformed,transformed.z) - vec4(0,0,1,0);
                 gl_Position.x /= u_aspect;
@@ -47,6 +50,7 @@ window.renderer = {
             `
             varying highp vec3 v_color;
             varying highp vec2 v_texCoord;
+            varying highp vec4 v_texBound;
 
             uniform highp vec3 u_pallete[256];
             uniform highp float u_usePallete;
@@ -55,6 +59,10 @@ window.renderer = {
 
             void main()
             {
+                highp vec2 coord = v_texCoord;
+                coord = fract(coord);
+                coord *= v_texBound.zw;
+                coord += v_texBound.xy;
                 gl_FragColor = texture2D(u_texture,v_texCoord); //* vec4(v_color,1);
                 gl_FragColor.xyz *= gl_FragColor.w;
 

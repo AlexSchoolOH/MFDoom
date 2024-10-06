@@ -21,6 +21,10 @@ window.wadRead = () => {
         });
     }
 
+    //Graphic
+    window.pallete.readPlayPal();
+    window.textures.registerAll();
+
     if (wad.FindFirstLumpOfName("MAP01") >= 0) {
         levelParser.read("MAP01");
     }
@@ -30,10 +34,6 @@ window.wadRead = () => {
     else {
         console.error("No first map.");
     }
-
-    //Graphic
-    window.pallete.readPlayPal();
-    window.textures.registerAll();
 
     setInterval(() => {
         let aspectRatio = renderer.gl.canvas.width / renderer.gl.canvas.height;

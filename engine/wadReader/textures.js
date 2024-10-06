@@ -64,8 +64,6 @@ window.textures = {
                 }
             }
 
-            console.log(textureIndexes.length);
-
             texture.position = [XOffset / width, 0, (XOffset + texture.width) / width, texture.height / maxHeight];
 
             XOffset += texture.width;

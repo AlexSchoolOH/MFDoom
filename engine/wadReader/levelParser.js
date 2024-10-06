@@ -187,6 +187,7 @@ window.levelParser = {
             a_position:{ numComponents: 3, data: []},
             a_color:{ numComponents: 3, data: []},
             a_texCoord:{ numComponents: 2, data: []},
+            a_texBound:{ numComponents: 4, data: []},
         };
 
         let points = [];
@@ -242,6 +243,8 @@ window.levelParser = {
                     1,1,
                     0,1,
                 );
+
+                mesh.a_texBound.data.push(...(textures.textureDefs[frontSideDef.middle].position.repeat(3)));
             }
             else {
                 //Ceiling
@@ -270,6 +273,8 @@ window.levelParser = {
                         1,1,
                         0,1,
                     );
+
+                    mesh.a_texBound.data.push(...(textures.textureDefs[frontSideDef.upper].position.repeat(3)));
                 }
                 
                 //floor
@@ -298,6 +303,8 @@ window.levelParser = {
                         1,1,
                         0,1,
                     );
+
+                    mesh.a_texBound.data.push(...(textures.textureDefs[frontSideDef.lower].position.repeat(3)));
                 }
             }
         }
@@ -383,6 +390,7 @@ window.levelParser = {
             a_position:{ numComponents: 3, data: []},
             a_color:{ numComponents: 3, data: []},
             a_texCoord:{ numComponents: 2, data: []},
+            a_texBound:{ numComponents: 4, data: []},
         };
 
         const levelData = window.levelParser.levelData;
@@ -490,6 +498,8 @@ window.levelParser = {
                     1,0,
                     1,1,
                 );
+
+                mesh.a_texBound.data.push(...(textures.textureDefs[sector.floorFlat].position.repeat(3)));
             }
 
             if (sector.ceilFlat != "F_SKY") {
@@ -508,6 +518,8 @@ window.levelParser = {
                     1,0,
                     1,1,
                 );
+
+                mesh.a_texBound.data.push(...(textures.textureDefs[sector.ceilFlat].position.repeat(3)));
             }
         }
 
