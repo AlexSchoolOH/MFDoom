@@ -72,7 +72,7 @@ window.wad = {
         const data = [];
         for (let index = 0; index < length; index++) {
             const offset = lumpInfo.Offset + (index * PartitionSize);
-            data.push(ReadCallback(offset));
+            data.push(ReadCallback(offset,index));
         };
         return data;
     },

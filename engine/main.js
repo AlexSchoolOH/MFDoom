@@ -21,8 +21,6 @@ window.wadRead = () => {
         });
     }
 
-    window.textures.registerAll();
-
     if (wad.FindFirstLumpOfName("MAP01") >= 0) {
         levelParser.read("MAP01");
     }
@@ -33,7 +31,9 @@ window.wadRead = () => {
         console.error("No first map.");
     }
 
+    //Graphic
     window.pallete.readPlayPal();
+    window.textures.registerAll();
 
     setInterval(() => {
         let aspectRatio = renderer.gl.canvas.width / renderer.gl.canvas.height;
@@ -50,7 +50,7 @@ window.wadRead = () => {
             if (levelParser.levelData.sectors) {
                 renderer.gl.viewport(0, 0, renderer.gl.canvas.width, renderer.gl.canvas.height);
                 renderer.gl.useProgram(renderer.shaders.unlit.program);
-                twgl.setUniforms(renderer.shaders.unlit,{u_camera:renderer.camera, u_aspect:aspectRatio});
+                twgl.setUniforms(renderer.shaders.unlit,{u_camera:renderer.camera, u_aspect:aspectRatio, u_texture:textures.sheet});
     
                 levelParser.levelData.subsectors.forEach(subsector => {
                     if (!subsector.mesh) return;

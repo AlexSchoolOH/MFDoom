@@ -186,6 +186,7 @@ window.levelParser = {
         const mesh = {
             a_position:{ numComponents: 3, data: []},
             a_color:{ numComponents: 3, data: []},
+            a_texCoord:{ numComponents: 2, data: []},
         };
 
         let points = [];
@@ -232,6 +233,15 @@ window.levelParser = {
                     0,1,0,
                     1,1,0
                 );
+
+                mesh.a_texCoord.data.push(
+                    0,0,
+                    1,0,
+                    1,1,
+                    0,0,
+                    1,1,
+                    0,1,
+                );
             }
             else {
                 //Ceiling
@@ -251,6 +261,15 @@ window.levelParser = {
                         0,1,0,
                         1,1,0
                     );
+
+                    mesh.a_texCoord.data.push(
+                        0,0,
+                        1,0,
+                        1,1,
+                        0,0,
+                        1,1,
+                        0,1,
+                    );
                 }
                 
                 //floor
@@ -269,6 +288,15 @@ window.levelParser = {
                         1,0,0,
                         0,1,0,
                         1,1,0
+                    );
+
+                    mesh.a_texCoord.data.push(
+                        0,0,
+                        1,0,
+                        1,1,
+                        0,0,
+                        1,1,
+                        0,1,
                     );
                 }
             }
@@ -354,6 +382,7 @@ window.levelParser = {
         const mesh = {
             a_position:{ numComponents: 3, data: []},
             a_color:{ numComponents: 3, data: []},
+            a_texCoord:{ numComponents: 2, data: []},
         };
 
         const levelData = window.levelParser.levelData;
@@ -455,6 +484,12 @@ window.levelParser = {
                     0,1,1,
                     1,0,1
                 );
+
+                mesh.a_texCoord.data.push(
+                    0,0,
+                    1,0,
+                    1,1,
+                );
             }
 
             if (sector.ceilFlat != "F_SKY") {
@@ -466,6 +501,12 @@ window.levelParser = {
                     1,0,1,
                     0,1,1,
                     0,0,1
+                );
+
+                mesh.a_texCoord.data.push(
+                    0,0,
+                    1,0,
+                    1,1,
                 );
             }
         }
