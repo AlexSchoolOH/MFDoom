@@ -21,6 +21,12 @@ window.wadRead = () => {
         });
     }
 
+    decorate.parse();
+
+    //Graphic
+    pallete.readPlayPal();
+    textures.registerAll();
+
     if (wad.FindFirstLumpOfName("MAP01") >= 0) {
         levelParser.read("MAP01");
     }
@@ -30,29 +36,4 @@ window.wadRead = () => {
     else {
         console.error("No first map.");
     }
-
-    setInterval(() => {
-        renderer.gl.clear(renderer.gl.COLOR_BUFFER_BIT | renderer.gl.DEPTH_BUFFER_BIT);
-        if (levelParser.levelData) {
-            //Entity Update Routine
-            if (levelParser.levelData.things) {
-                levelParser.levelData.things.forEach(thing => {
-                    thing._update();
-                });
-            }
-
-            //Level Draw Routine
-            if (levelParser.levelData.sectors) {
-                renderer.gl.viewport(0, 0, 600, 300);
-                renderer.gl.useProgram(renderer.shaders.unlit.program);
-                twgl.setUniforms(renderer.shaders.unlit,{u_camera:renderer.camera});
-    
-                levelParser.levelData.subsectors.forEach(subsector => {
-                    if (!subsector.mesh) return;
-                    twgl.setBuffersAndAttributes(renderer.gl, renderer.shaders.unlit, subsector.mesh);
-                    twgl.drawBufferInfo(renderer.gl, subsector.mesh);
-                });
-            }
-        }
-    },16)
 }

@@ -7,12 +7,9 @@ window.bsp = {
 
     intersectOffset: (node1,node2) => {
         let denominator = window.bsp.perpDot([node1.dx,node1.dy],[node2.dx,node2.dy]);
-        console.log("Denominator " +denominator);
         if (Math.abs(denominator) < 1e-16) {
-            console.log("Less than");
             return;
         } else {
-            console.log("Greater than " + window.bsp.perpDot([node2.x - node1.x, node2.y - node1.y],[node2.dx,node2.dy]) / denominator)
             return window.bsp.perpDot([node2.x - node1.x, node2.y - node1.y],[node2.dx,node2.dy]) / denominator;
         }
     },
@@ -49,7 +46,6 @@ window.bsp = {
         if (ua < 0 || ua > 1 || ub < 0 || ub > 1) {
             return false
         }
-    
       // Return a object with the x and y coordinates of the intersection
         let x = x1 + ua * (x2 - x1)
         let y = y1 + ua * (y2 - y1)
@@ -57,4 +53,31 @@ window.bsp = {
         return [x, y]
         */
     },
+      
+    isOnBack:(x,y,nodeDef) => {
+        x -= nodeDef.x;
+        y -= nodeDef.y;
+        return x * nodeDef.dy - y * nodeDef.dx <= 0
+    },
+
+    traverseToBottom:(x,y,fromNode) => {
+        if (typeof fromNode === "undefined") {
+            return window.bsp.traverseToBottom(x,y,levelParser.levelData.nodes.length - 1);
+        }
+        else {
+            if (fromNode >= window.bsp.subSectorID) {
+                fromNode -= window.bsp.subSectorID;
+                return levelParser.levelData.subsectors[fromNode];
+            }
+
+            const nodeDef = levelParser.levelData.nodes[fromNode];
+            
+            if (!window.bsp.isOnBack(x,y,nodeDef)) {
+                return window.bsp.traverseToBottom(x,y,nodeDef.rightChild);
+            }
+            else {
+                return window.bsp.traverseToBottom(x,y,nodeDef.leftChild);
+            }
+        }
+    }
 }

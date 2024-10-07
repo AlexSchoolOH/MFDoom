@@ -56,7 +56,7 @@ window.wad = {
     ReadString:(offset,length) => {
         let string = "";
         for (let index = 0; index < length; index++) {
-            const character = String.fromCharCode(window.wad.ReadBytes(offset + index,1));
+            const character = ascii[window.wad.ReadBytes(offset + index,1)];
             if (window.wad.ReadBytes(offset + index,1) >= 10) {
                 string += character;
             }
@@ -72,7 +72,7 @@ window.wad = {
         const data = [];
         for (let index = 0; index < length; index++) {
             const offset = lumpInfo.Offset + (index * PartitionSize);
-            data.push(ReadCallback(offset));
+            data.push(ReadCallback(offset,index));
         };
         return data;
     },
