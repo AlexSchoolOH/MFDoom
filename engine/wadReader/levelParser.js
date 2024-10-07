@@ -147,7 +147,7 @@ window.levelParser = {
             }
             let back = linedef.back;
             if (back != 65535) {
-                window.levelParser.levelData.sectors[levelData.sideDefs[back].sector].lines.push([index,true]);
+                window.levelParser.levelData.sectors[levelData.sideDefs[back].sector].lines.push([index,true
             }
         }
     },
@@ -384,6 +384,36 @@ window.levelParser = {
                     mesh.a_renderType.data.push((backSector.floorFlat == "F_SKY") ? 1 : 0);
                     mesh.a_renderType.data.push((backSector.floorFlat == "F_SKY") ? 1 : 0);
                     mesh.a_renderType.data.push((backSector.floorFlat == "F_SKY") ? 1 : 0);
+                }
+            }
+        }
+
+        /* Imma stop doing subsectors for floors.
+        for (let i_line = 0; i_line < subSector.path.length - 1; i_line++) {
+            for (let j_line = i_line + 1; j_line < subSector.path.length; j_line++) {
+                console.log(`i ${i_line} j ${j_line}`);
+                const node1 = levelData.nodes[subSector.path[i_line]];
+                const node2 = levelData.nodes[subSector.path[j_line]];
+                console.log(node1);
+                console.log(node2);
+                const point = bsp.findIntersection(node1,node2);
+                if (!point) continue;
+                console.log(`calculated point ${JSON.stringify(point)}`);
+
+                let dist = (l) => bsp.perpDot(point,[l.dx,l.dy]) + bsp.perpDot([l.dx,l.dy],[l.x,l.y]);
+                let within_bsp = (d) => d >= -1e-3;
+                let within_seg = (d) => d <= 10;
+                let convert = (l) => levelData.nodes[l];
+                //The intersection point must lie both within the BSP volume
+                //and the segs volume.
+                let inside_bsp_and_segs = subSector.path.map(convert).map(dist).every(within_bsp)
+                    && subSector.path.map(convert).map(dist).every(within_seg);
+                if (inside_bsp_and_segs) {
+                    points.push(point);
+                    console.log(`Added point ${JSON.stringify(point)}`);
+                }
+                else {
+                    console.log(`Refused point ${JSON.stringify(point)}`);
                 }
             }
         }

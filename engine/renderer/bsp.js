@@ -46,7 +46,6 @@ window.bsp = {
         if (ua < 0 || ua > 1 || ub < 0 || ub > 1) {
             return false
         }
-    
       // Return a object with the x and y coordinates of the intersection
         let x = x1 + ua * (x2 - x1)
         let y = y1 + ua * (y2 - y1)
@@ -54,7 +53,7 @@ window.bsp = {
         return [x, y]
         */
     },
-
+      
     isOnBack:(x,y,nodeDef) => {
         x -= nodeDef.x;
         y -= nodeDef.y;
