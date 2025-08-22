@@ -147,7 +147,7 @@ window.levelParser = {
             }
             let back = linedef.back;
             if (back != 65535) {
-                window.levelParser.levelData.sectors[levelData.sideDefs[back].sector].lines.push([index,true
+                window.levelParser.levelData.sectors[levelData.sideDefs[back].sector].lines.push([index,true]);
             }
         }
     },
