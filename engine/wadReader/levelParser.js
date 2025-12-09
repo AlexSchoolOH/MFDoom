@@ -279,7 +279,7 @@ window.levelParser = {
             }
             else {
                 //Ceiling
-                if (frontSector.ceilingHeight > backSector.ceilingHeight) {
+                if (frontSector.ceilingHeight > backSector.ceilingHeight && textures.textureDefs[frontSideDef.upper]) {
                     mesh.a_position.data.push(levelData.vertices[seg.start][0],backSector.ceilingHeight,levelData.vertices[seg.start][1]);
                     mesh.a_position.data.push(levelData.vertices[seg.end][0],  backSector.ceilingHeight,levelData.vertices[seg.end][1]);
                     mesh.a_position.data.push(levelData.vertices[seg.end][0],  frontSector.ceilingHeight,levelData.vertices[seg.end][1]);
@@ -287,7 +287,7 @@ window.levelParser = {
                     mesh.a_position.data.push(levelData.vertices[seg.end][0],  frontSector.ceilingHeight,levelData.vertices[seg.end][1]);
                     mesh.a_position.data.push(levelData.vertices[seg.start][0],frontSector.ceilingHeight,levelData.vertices[seg.start][1]);
 
-                    const heightDifferenceUpper = frontSector.ceilingHeight - backSector.ceilingHeight;    
+                    const heightDifferenceUpper = frontSector.ceilingHeight - backSector.ceilingHeight;
                     const textureWidthUpper = 64 * (textures.textureDefs[frontSideDef.upper].width / 64);
                     const textureHeightUpper = 64 * (textures.textureDefs[frontSideDef.upper].height / 64);
     
@@ -333,7 +333,7 @@ window.levelParser = {
                 }
                 
                 //floor
-                if (frontSector.floorHeight < backSector.floorHeight) {
+                if (frontSector.floorHeight < backSector.floorHeight && textures.textureDefs[frontSideDef.lower]) {
                     mesh.a_position.data.push(levelData.vertices[seg.start][0],frontSector.floorHeight,levelData.vertices[seg.start][1]);
                     mesh.a_position.data.push(levelData.vertices[seg.end][0],  frontSector.floorHeight,levelData.vertices[seg.end][1]);
                     mesh.a_position.data.push(levelData.vertices[seg.end][0],  backSector.floorHeight,levelData.vertices[seg.end][1]);

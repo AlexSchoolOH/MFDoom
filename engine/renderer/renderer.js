@@ -106,6 +106,7 @@ window.renderer = {
                 }
                 else if (renderType == 1) {
                     highp vec2 coord = gl_FragCoord.xy / vec2(600,-300) + vec2(atan(u_camera[0][1],u_camera[0][0]) / 3.1415962,0); 
+                    coord.y = ((coord.y + 0.5) * (1.0 - pow(abs((gl_FragCoord.xy / vec2(600,-300)).x - 0.5), 2.0))) - 0.5;
                     coord = fract(coord);
                     coord *= v_texBound.zw;
                     coord += v_texBound.xy;
@@ -123,7 +124,6 @@ window.renderer = {
         window.renderer.gl.enable(renderer.gl.DEPTH_TEST);
         window.renderer.gl.depthFunc(renderer.gl.LEQUAL);
 
-        window.renderer.gl.enable(window.renderer.gl.CULL_FACE);
-        window.renderer.gl.cullFace(window.renderer.gl.BACK);
+        window.renderer.gl.disable(window.renderer.gl.CULL_FACE);
     }
 }

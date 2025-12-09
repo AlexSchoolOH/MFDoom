@@ -21,10 +21,10 @@ entities.player = class extends entities.base {
     }
 
     update() {
-        if (window.inputs.keys["w"]) {this.vz += 0.25 * renderer.camera[1]; this.vx -= 0.25 * renderer.camera[0];}
-        if (window.inputs.keys["s"]) {this.vz -= 0.25 *renderer.camera[1]; this.vx += 0.25 * renderer.camera[0];}
-        if (window.inputs.keys["a"]) {this.vx -= 0.25 * renderer.camera[1]; this.vz -= 0.25 * renderer.camera[0];}
-        if (window.inputs.keys["d"]) {this.vx += 0.25 * renderer.camera[1]; this.vz += 0.25 * renderer.camera[0];}
+        if (window.inputs.keys["w"]) {this.vz += 0.3 * renderer.camera[1]; this.vx -= 0.3 * renderer.camera[0];}
+        if (window.inputs.keys["s"]) {this.vz -= 0.3 *renderer.camera[1]; this.vx += 0.3 * renderer.camera[0];}
+        if (window.inputs.keys["a"]) {this.vx -= 0.3 * renderer.camera[1]; this.vz -= 0.3 * renderer.camera[0];}
+        if (window.inputs.keys["d"]) {this.vx += 0.3 * renderer.camera[1]; this.vz += 0.3 * renderer.camera[0];}
 
         const currentSubsector = bsp.traverseToBottom(this.x,this.z);
         const segment = levelParser.levelData.segs[currentSubsector.first];
@@ -43,12 +43,12 @@ entities.player = class extends entities.base {
         this.vz *= 0.9;
 
         this.currentSpeed = Math.sqrt(Math.pow(this.vx,2) + Math.pow(this.vz,2));
-        this.cameraBob += this.currentSpeed;
+        this.cameraBob += this.currentSpeed * 1.5;
         this.cameraOffset *= 0.75;
         this.cameraOffset += Math.sin(this.cameraBob * 0.075) * Math.min(1,this.currentSpeed);
 
-        if (window.inputs.keys["1"]) this.angle -= 0.05;
-        if (window.inputs.keys["2"]) this.angle += 0.05;
+        if (window.inputs.keys["1"]) this.angle -= 0.1;
+        if (window.inputs.keys["2"]) this.angle += 0.1;
         if (window.inputs.keys["1"]) this.roll -= 0.0125;
         if (window.inputs.keys["2"]) this.roll += 0.0125;
 
